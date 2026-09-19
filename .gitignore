@@ -8,3 +8,8 @@ __pycache__/
 .env
 .env.*
 !.env.example
+
+# ED-2: cloned graph cache + generated dump
+.cache/
+data/dump/**
+!data/dump/.gitkeep

@@ -1,18 +1,23 @@
 ---
 import '../styles/global.css';
 import ExampleDataBanner from '../components/ExampleDataBanner.astro';
+import { getMeta } from '../lib/dump';
 
 interface Props {
   title?: string;
   description?: string;
-  /** When true, show the example-data banner (ED-2 will drive from dump meta). */
+  /**
+   * Override example banner. Default: dump `meta.is_example`.
+   * Pass explicitly only for tests or special pages.
+   */
   showExampleBanner?: boolean;
 }
 
+const meta = getMeta();
 const {
   title = 'Evidence Desk',
   description = 'Search and browse the OSMF Shared Evidence Graph.',
-  showExampleBanner = false,
+  showExampleBanner = meta.is_example,
 } = Astro.props;
 
 const pathname = Astro.url.pathname;

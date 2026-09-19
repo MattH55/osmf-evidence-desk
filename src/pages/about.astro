@@ -1,5 +1,8 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { getMeta } from '../lib/dump';
+
+const meta = getMeta();
 ---
 
 <BaseLayout
@@ -18,10 +21,23 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     diagnosis, or treatment.
   </p>
   <p>
-    Soft launch may use illustrative / example dump data
-    (<code>meta.is_example</code>) with a persistent banner until curated claims
-    are ready. Product decisions (host, dump source, soft-launch policy) are
-    recorded in
+    {
+      meta.is_example ? (
+        <>
+          This build uses <strong>illustrative / example</strong> dump data
+          (<code>meta.is_example: true</code>). A persistent banner appears on
+          every page until curated claims ship and the dump flag is cleared.
+        </>
+      ) : (
+        <>
+          This build uses curated dump data (<code>meta.is_example: false</code>
+          ).
+        </>
+      )
+    }
+    {' '}
+    Publisher: {meta.publisher}. License: {meta.license}. Product decisions
+    (host, dump source, soft-launch policy) are recorded in
     <a href="https://github.com/MattH55/osmf-evidence-desk/blob/main/DECISIONS.md"
       >DECISIONS.md</a
     >.
