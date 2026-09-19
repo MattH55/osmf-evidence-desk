@@ -2,7 +2,7 @@
 
 Search-and-browse app for the [OSMF Shared Evidence Graph](https://github.com/MattH55/osmf-evidence-graph) — conditions, biomarkers, agents, trials, papers, and claims with provenance and evidence tiers.
 
-**Status:** ED-4 entity pages (Astro + TypeScript, static output). Claim detail pages are ED-5.
+**Status:** ED-5 claim pages (Astro + TypeScript, static output).
 
 **Production host (planned):** [desk.opensourcemed.info](https://desk.opensourcemed.info) — DNS/deploy in ED-17.
 
@@ -31,13 +31,13 @@ npm run build        # runs fetch-dump via prebuild, then astro build
 
 **Schema gate:** only `meta.schema_version` `"0.1.0"` is accepted today. Unsupported or missing dumps abort `astro build`.
 
-**Helpers:** `getDump()`, `getMeta()`, `getAllEntities()`, `getEntity(id)`, `getClaimsForEntity(id)`, `getRelatedEntities(id)`, `getSeedConditions()`, `getEntitiesByType(type)`.
+**Helpers:** `getDump()`, `getMeta()`, `getAllEntities()`, `getEntity(id)`, `getAllClaims()`, `getClaim(id)`, `getClaimsForEntity(id)`, `getRelatedEntities(id)`, `getSeedConditions()`, `getEntitiesByType(type)`.
 
 When EG-8 publishes a public dump artifact, prefer fetching that URL and drop the clone+build coupling (see [DECISIONS.md](./DECISIONS.md)).
 
 ## Tier chrome (ED-3)
 
-Shared UI: `TierBadge`, `ClaimStatusChip`, `ClaimCard`, `TierLegend` under `src/components/`. C/D limitations always render inline. Preview: `/dev/claim-preview` (temporary until ED-5).
+Shared UI: `TierBadge`, `ClaimStatusChip`, `ClaimCard`, `TierLegend` under `src/components/`. C/D limitations always render inline. Source links (DOI/PMID/NCT/URL) via `src/lib/sources.ts`. Dev preview: `/dev/claim-preview`.
 
 ## Entity pages (ED-4)
 
@@ -52,6 +52,21 @@ Every dump entity gets a static page at build time via `getStaticPaths`.
 **404:** Only entities present in the dump are generated. Requests to unknown ids (paths not in `dist/`) 404 naturally on static hosts. Deep links for the same entity id stay stable across builds.
 
 **URL scheme:** split the `osmf:` id on `:`, join with `/` under `/entity/`. Example: `osmf:condition:pacvs` → `/entity/osmf/condition/pacvs`.
+
+## Claim pages (ED-5)
+
+Every dump claim gets a static page at build time via `getStaticPaths`.
+
+| Piece | Role |
+|-------|------|
+| `src/lib/ids.ts` | Also `claimIdToPath`, `pathPartsToClaimId`, `claimHref` — same split-on-`:` / join-with-`/` pattern under `/claim/` |
+| `src/pages/claim/[...id].astro` | Claim detail: id, predicate, tier, status, subject/object links (or `object_literal`), sources as links, limitations (always visible for C/D), reviewed_at/by, license, supersedes_id |
+| `src/lib/sources.ts` | Shared DOI / PMID / NCT / URL → href helpers used by ClaimCard and claim pages |
+| ClaimCard on entity pages | Claim id links to the claim page via `claimHref` (“View claim”) |
+
+**404:** Only claims present in the dump are generated.
+
+**URL scheme:** `osmf:claim:ex-pem-of-long-covid` → `/claim/osmf/claim/ex-pem-of-long-covid`.
 
 ## Develop
 

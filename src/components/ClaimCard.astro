@@ -1,20 +1,19 @@
 ---
 /**
- * Presentational claim card for desk chrome (ED-3 / ED-4).
+ * Presentational claim card for desk chrome (ED-3 / ED-4 / ED-5).
  * Tiers C/D always show `limitations` inline when present — never behind
  * <details> or a click toggle.
  */
 import TierBadge from './TierBadge.astro';
 import ClaimStatusChip from './ClaimStatusChip.astro';
+import { sourceHref, sourceText, type ClaimSourceLink } from '../lib/sources';
 
-export interface ClaimSourceLink {
-  type?: string;
-  value?: string;
-  label?: string;
-}
+export type { ClaimSourceLink };
 
 interface Props {
   id?: string;
+  /** Desk path to the claim detail page (ED-5). */
+  claimHref?: string;
   /** Free-text statement; optional when subject/predicate/object are provided. */
   statement?: string;
   tier: 'A' | 'B' | 'C' | 'D';
@@ -33,6 +32,7 @@ interface Props {
 
 const {
   id,
+  claimHref,
   statement,
   tier,
   status,
@@ -56,22 +56,6 @@ const hasSpo = Boolean(subjectLabel || predicate || objectLabel);
 const sourceList = Array.isArray(sources) ? sources : [];
 const hasRealSources = sourceList.length > 0;
 
-function sourceHref(s: ClaimSourceLink): string | undefined {
-  if (!s.value) return undefined;
-  if (/^https?:\/\//i.test(s.value)) return s.value;
-  if (s.type === 'doi' && !s.value.startsWith('http')) {
-    return `https://doi.org/${s.value.replace(/^doi:/i, '')}`;
-  }
-  if (s.type === 'pmid' && /^\d+$/.test(s.value)) {
-    return `https://pubmed.ncbi.nlm.nih.gov/${s.value}/`;
-  }
-  return undefined;
-}
-
-function sourceText(s: ClaimSourceLink): string {
-  return s.label || s.value || s.type || 'Source';
-}
-
 function formatReviewedAt(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
@@ -85,7 +69,17 @@ function formatReviewedAt(iso: string): string {
       <TierBadge tier={tier} />
       <ClaimStatusChip status={status} />
     </div>
-    {id && <code class="claim-card__id">{id}</code>}
+    {
+      id &&
+        (claimHref ? (
+          <a class="claim-card__id claim-card__id-link" href={claimHref}>
+            <code>{id}</code>
+            <span class="claim-card__view">View claim</span>
+          </a>
+        ) : (
+          <code class="claim-card__id">{id}</code>
+        ))
+    }
   </header>
 
   {

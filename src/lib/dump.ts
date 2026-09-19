@@ -1,5 +1,5 @@
 /**
- * Build-time evidence-graph dump loader (ED-2 / ED-4).
+ * Build-time evidence-graph dump loader (ED-2 / ED-4 / ED-5).
  *
  * Reads `data/dump/latest.json` produced by `npm run fetch-dump`.
  * Missing file or unsupported `meta.schema_version` fails the Astro build.
@@ -58,7 +58,10 @@ export interface DumpClaim {
   id: string;
   subject_id: string;
   predicate: string;
-  object_id: string;
+  /** Entity object id; mutually exclusive with object_literal in schema. */
+  object_id?: string;
+  /** Literal object when not an entity ref. */
+  object_literal?: string;
   evidence_tier: EvidenceTier | string;
   sources?: DumpClaimSource[];
   limitations?: string;
@@ -67,6 +70,7 @@ export interface DumpClaim {
   reviewed_at?: string;
   license?: string;
   confidence_notes?: string;
+  supersedes_id?: string;
   [key: string]: unknown;
 }
 
@@ -92,6 +96,7 @@ const DUMP_PATH = path.join(ROOT, 'data', 'dump', 'latest.json');
 
 let cached: EvidenceDump | null = null;
 let entityIndex: Map<string, DumpEntity> | null = null;
+let claimIndex: Map<string, DumpClaim> | null = null;
 
 function fail(message: string): never {
   throw new Error(`[dump] ${message}`);
@@ -147,6 +152,13 @@ function getEntityIndex(): Map<string, DumpEntity> {
   return entityIndex;
 }
 
+function getClaimIndex(): Map<string, DumpClaim> {
+  if (!claimIndex) {
+    claimIndex = new Map(getDump().claims.map((c) => [c.id, c]));
+  }
+  return claimIndex;
+}
+
 /** Full validated dump (cached per process). */
 export function getDump(): EvidenceDump {
   if (!cached) {
@@ -169,6 +181,10 @@ export function getAllClaims(): DumpClaim[] {
 
 export function getEntity(id: string): DumpEntity | undefined {
   return getEntityIndex().get(id);
+}
+
+export function getClaim(id: string): DumpClaim | undefined {
+  return getClaimIndex().get(id);
 }
 
 export function getEntitiesByType(type: string): DumpEntity[] {
@@ -196,7 +212,7 @@ export function getClaimsForEntity(id: string): EntityClaims {
   const inClaims: DumpClaim[] = [];
   for (const claim of getDump().claims) {
     if (claim.subject_id === id) out.push(claim);
-    if (claim.object_id === id) inClaims.push(claim);
+    if (claim.object_id && claim.object_id === id) inClaims.push(claim);
   }
   const all = [...out, ...inClaims];
   const isSuperseded = (c: DumpClaim) => c.status === 'superseded';
@@ -217,7 +233,7 @@ export function getRelatedEntities(id: string): DumpEntity[] {
   for (const claim of all) {
     const other =
       claim.subject_id === id
-        ? claim.object_id
+        ? claim.object_id ?? null
         : claim.object_id === id
           ? claim.subject_id
           : null;

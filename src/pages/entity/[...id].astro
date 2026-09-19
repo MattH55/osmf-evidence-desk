@@ -18,7 +18,7 @@ import {
   type EvidenceTier,
   type ClaimStatus,
 } from '../../lib/dump';
-import { entityHref, entityIdToPath } from '../../lib/ids';
+import { claimHref, entityHref, entityIdToPath } from '../../lib/ids';
 
 export function getStaticPaths() {
   return getAllEntities().map((entity) => ({
@@ -56,10 +56,19 @@ function claimCardProps(claim: DumpClaim) {
   const status: ClaimStatus = isStatus(statusRaw) ? statusRaw : 'draft';
 
   const subjectEntity = getEntity(claim.subject_id);
-  const objectEntity = getEntity(claim.object_id);
+  const objectId = claim.object_id;
+  const objectLiteral =
+    typeof claim.object_literal === 'string' ? claim.object_literal : undefined;
+  const objectEntity = objectId ? getEntity(objectId) : undefined;
+  const objectLabel = objectLiteral
+    ? objectLiteral
+    : objectId
+      ? getEntityLabel(objectId)
+      : undefined;
 
   return {
     id: claim.id,
+    claimHref: claimHref(claim.id),
     tier,
     status,
     sources: claim.sources ?? [],
@@ -68,7 +77,7 @@ function claimCardProps(claim: DumpClaim) {
     subjectLabel: getEntityLabel(claim.subject_id),
     subjectHref: subjectEntity ? entityHref(subjectEntity.id) : undefined,
     predicate: claim.predicate,
-    objectLabel: getEntityLabel(claim.object_id),
+    objectLabel,
     objectHref: objectEntity ? entityHref(objectEntity.id) : undefined,
   };
 }
