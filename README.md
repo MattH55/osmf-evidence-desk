@@ -2,14 +2,14 @@
 
 Search-and-browse app for the [OSMF Shared Evidence Graph](https://github.com/MattH55/osmf-evidence-graph) — conditions, biomarkers, agents, trials, papers, and claims with provenance and evidence tiers.
 
-**Status:** ED-16 CI dump-ref checks + dist artifact; ED-17 in-repo Vercel/static deploy docs (Astro + TypeScript, static output).
+**Status:** ED-16 CI dump-ref checks + dist artifact; ED-17 GitHub Pages deploy (`desk.opensourcemed.info`, Astro + TypeScript, static output).
 
-**Production host (planned):** [desk.opensourcemed.info](https://desk.opensourcemed.info) — see [DEPLOY.md](./DEPLOY.md) (ED-17). Not asserted live until DNS + Vercel are verified.
+**Production host:** [desk.opensourcemed.info](https://desk.opensourcemed.info) — see [DEPLOY.md](./DEPLOY.md) (ED-17). Not asserted live until DNS + GitHub Pages HTTPS are verified.
 
 ## Stack
 
 - **[Astro](https://astro.build/)** + TypeScript, static `output` (no auth, no DB)
-- Default static `dist/` for later Vercel static hosting
+- Default static `dist/` for GitHub Pages (`base: '/'`, custom domain)
 - Soft-launch example banner driven from dump `meta.is_example`
 
 ## Evidence dump (ED-2)
@@ -120,7 +120,7 @@ On each entity page: client-side CSV / BibTeX download and one-click copy citati
 
 ## CI (ED-16)
 
-GitHub Actions (`.github/workflows/build.yml`) on every PR and push to `main`:
+GitHub Actions (`.github/workflows/build.yml`) on every PR (production deploy is separate — see Deploy):
 
 1. `npm ci`
 2. `npm run fetch-dump`
@@ -136,14 +136,16 @@ npm run check:dist   # requires dist/ from a prior build
 
 ## Deploy (ED-17)
 
-Static hosting on Vercel. In-repo config:
+Static hosting on **GitHub Pages** with custom domain `desk.opensourcemed.info`. In-repo config:
 
 | File | Role |
 |------|------|
-| `vercel.json` | `installCommand` / `buildCommand` (includes `fetch-dump`) / `outputDirectory: dist` |
-| [DEPLOY.md](./DEPLOY.md) | Dump-on-Vercel notes, PR previews, DNS CNAME for `desk.opensourcemed.info`, ops checklist |
+| `public/CNAME` | Custom domain `desk.opensourcemed.info` |
+| `.github/workflows/deploy-pages.yml` | Deploy on push to `main` (fetch-dump → build → Pages artifact → deploy) |
+| `.github/workflows/build.yml` | PR CI only (build + artifact; no deploy) |
+| [DEPLOY.md](./DEPLOY.md) | Pages enablement, DNS CNAME `desk` → `MattH55.github.io`, HTTPS, apex vs subdomain |
 
-Connecting the Vercel GitHub app and attaching the custom domain are **account/DNS steps** — they are not completed by merging this repo alone. Do not assume production is live until `https://desk.opensourcemed.info/` is verified.
+Enabling Pages (Actions source) and creating the DNS CNAME are **account/DNS steps**. Do not assume production is live until `https://desk.opensourcemed.info/` is verified.
 
 ## Develop
 

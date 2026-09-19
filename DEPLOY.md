@@ -1,65 +1,78 @@
 # Deploying Evidence Desk (ED-17)
 
-Production target: **[desk.opensourcemed.info](https://desk.opensourcemed.info)** on **Vercel** (static Astro `dist/`).
+Production target: **[desk.opensourcemed.info](https://desk.opensourcemed.info)** on **GitHub Pages** (static Astro `dist/`).
 
 Desk does **not** vendor the evidence-graph dump. Every deploy must **fetch and build the dump over the network** before `astro build`.
 
-## How Vercel builds the dump
+## How GitHub Actions builds the dump
 
 | Piece | Role |
 |-------|------|
 | `scripts/fetch-dump.mjs` | Shallow-clones `MattH55/osmf-evidence-graph` @ `main` into `.cache/`, runs `npm ci` + `npm run build:dump`, copies `dist/dump/latest.json` → `data/dump/latest.json` and `public/dump/latest.json`, then builds the search index |
 | `scripts/check-dump-refs.mjs` | Fails the build if entity/claim ids duplicate or claims reference missing entities |
-| `astro.config.mjs` | `output: 'static'`, `site: 'https://desk.opensourcemed.info'` |
-| `vercel.json` | Static project: `installCommand` / `buildCommand` / `outputDirectory: dist` |
+| `astro.config.mjs` | `output: 'static'`, `site: 'https://desk.opensourcemed.info'`, `base: '/'` (custom domain) |
+| `public/CNAME` | Publishes custom domain `desk.opensourcemed.info` with the Pages site |
+| `.github/workflows/deploy-pages.yml` | On push to `main` (and `workflow_dispatch`): fetch-dump → check → build → upload Pages artifact → deploy |
 
-**`vercel.json` buildCommand** (must have outbound network to GitHub):
+**Deploy workflow** (needs outbound network on Actions runners):
 
 ```text
-npm run fetch-dump && npm run check:dump && npx astro build
+npm ci
+npm run fetch-dump
+npm run check:dump
+npm run build
+npm run check:dist
+→ actions/upload-pages-artifact (path: dist)
+→ actions/deploy-pages
 ```
 
-Vercel’s build environment needs:
+GitHub Actions needs:
 
-1. **Network** to `github.com` (clone graph) and npm registry (graph + Desk deps).
-2. **Node.js 20+** (see `engines` in `package.json`).
-3. No secrets for the public graph repo today. If the graph becomes private, add a deploy token as a Vercel env var and teach `fetch-dump.mjs` to use it.
+1. **Network** to `github.com` (clone graph) and the npm registry (graph + Desk deps). The graph repo is public today — no secrets required.
+2. **Node.js 20** (`actions/setup-node`).
+3. If the graph becomes private, add a deploy token as a repo secret and teach `fetch-dump.mjs` to use it.
 
-Do **not** set a build command that only runs `astro build` without `fetch-dump` — the dump files are gitignored and the build will fail.
+Do **not** deploy a `dist/` that was built without `fetch-dump` — the dump files are gitignored and the site will be empty or fail checks.
 
-## One-time: connect the GitHub repo to Vercel
+PR CI (`.github/workflows/build.yml`) runs the same fetch/check/build/smoke steps but only uploads a regular Actions artifact — it does **not** deploy. Production deploy runs only from `deploy-pages.yml` after merge to `main`.
 
-1. Sign in to [Vercel](https://vercel.com) with an account that can create projects for OSMF.
-2. **Add New Project** → Import `MattH55/osmf-evidence-desk`.
-3. Confirm settings match `vercel.json`:
-   - Framework Preset: **Other** (static; `framework: null`)
-   - Install Command: `npm ci`
-   - Build Command: `npm run fetch-dump && npm run check:dump && npx astro build`
-   - Output Directory: `dist`
-4. Deploy. Root production URL will be `*.vercel.app` until the custom domain is attached.
-5. Enable the **Vercel GitHub app** on the repo so every PR gets a **Preview Deployment** URL in the GitHub Checks / PR timeline.
+## One-time: enable GitHub Pages (Actions)
 
-### PR previews
+1. Repo **Settings → Pages** (or API):
+   - Source: **GitHub Actions** (not “Deploy from a branch”).
+2. Or via `gh`:
 
-Once the Vercel ↔ GitHub integration is connected:
+   ```bash
+   gh api -X POST repos/MattH55/osmf-evidence-desk/pages -f build_type=workflow
+   # If already configured: PATCH the same endpoint / update source to workflow
+   ```
 
-- Pushing a PR branch triggers a preview deploy with the same `buildCommand` (including `fetch-dump`).
-- Preview URLs are ephemeral (`*.vercel.app`); use them to review entity/claim pages before merge.
-- CI in `.github/workflows/build.yml` remains the gate for dump integrity + `dist/` artifact; Vercel previews are complementary.
+3. Merge to `main` (or run **Deploy GitHub Pages** → **Run workflow**). The first successful `deploy-pages` job publishes the site.
+4. Default Pages URL (until custom domain DNS works): `https://MattH55.github.io/osmf-evidence-desk/` is **not** used when a custom domain + `base: '/'` is set — expect `https://desk.opensourcemed.info/` once DNS is live. While DNS is pending, check the deployment URL shown on the Actions run / Pages settings (often `https://matth55.github.io/osmf-evidence-desk/` only if base were a project path; with custom domain CNAME file, GitHub serves the apex of the configured custom domain after DNS).
+
+### Apex vs subdomain
+
+| Hostname | Typical DNS | Notes |
+|----------|-------------|--------|
+| `desk.opensourcemed.info` (subdomain) | **CNAME** → `MattH55.github.io` | Preferred for Desk; matches this repo’s `public/CNAME` |
+| Apex `opensourcemed.info` | A/AAAA to GitHub IPs (or ALIAS/ANAME) | Not used for Desk; keep apex on the hub |
+
+Use a **subdomain** CNAME for Desk. Do not point the apex at Pages unless you intend the whole domain to be this site.
 
 ## Custom domain: desk.opensourcemed.info
 
-1. In the Vercel project → **Settings → Domains** → add `desk.opensourcemed.info`.
-2. At your DNS host for `opensourcemed.info`, create a **CNAME**:
+1. Ensure `public/CNAME` contains exactly `desk.opensourcemed.info` (committed; this PR).
+2. In GitHub → **Settings → Pages → Custom domain**, confirm `desk.opensourcemed.info` (GitHub may auto-detect from `CNAME`).
+3. At your DNS host for `opensourcemed.info`, create:
 
    | Host | Type | Value |
    |------|------|-------|
-   | `desk` | CNAME | `cname.vercel-dns.com` (or the exact target Vercel shows) |
+   | `desk` | CNAME | `MattH55.github.io` |
 
-3. Wait for TLS provisioning (Vercel issues the certificate automatically).
-4. Optional later: redirect `opensourcemed.info/desk` → `https://desk.opensourcemed.info` on the hub (see DECISIONS.md).
+4. In Pages settings, enable **Enforce HTTPS** after DNS has propagated and the certificate is ready (can take minutes to hours).
+5. Optional later: redirect `opensourcemed.info/desk` → `https://desk.opensourcemed.info` on the hub (see DECISIONS.md).
 
-Until DNS + domain are verified in Vercel, **production is not live** at `desk.opensourcemed.info` even if a `*.vercel.app` preview exists.
+Until DNS points at GitHub and HTTPS is enforced, **production is not reliably live** at `desk.opensourcemed.info` even if Actions deploys succeed.
 
 ## Local parity
 
@@ -72,16 +85,18 @@ npm run check:dist       # optional smoke: every entity/claim has a dist page
 npm run preview
 ```
 
-## Checklist (ops — outside this repo)
+## Checklist (ops — outside / after this repo)
 
-- [ ] Vercel project created and linked to `MattH55/osmf-evidence-desk`
-- [ ] GitHub integration installed (PR preview comments/checks)
-- [ ] `desk.opensourcemed.info` added in Vercel Domains
-- [ ] DNS CNAME `desk` → Vercel target
+- [ ] Pages source = **GitHub Actions** (`build_type=workflow`)
+- [ ] `deploy-pages.yml` green on `main`
+- [ ] Custom domain `desk.opensourcemed.info` shown in Pages settings
+- [ ] DNS CNAME `desk` → `MattH55.github.io`
+- [ ] **Enforce HTTPS** enabled
 - [ ] Confirm `https://desk.opensourcemed.info/` serves the soft-launch banner + seed entities
 - [ ] Confirm `/dump/latest.json` is reachable from production
 
 ## Related
 
 - ED-0 hosting decision: [DECISIONS.md](./DECISIONS.md)
-- CI (ED-16): `.github/workflows/build.yml` — fetch-dump → check:dump → build → check:dist → upload `dist/` artifact
+- PR CI (ED-16): `.github/workflows/build.yml` — fetch-dump → check:dump → build → check:dist → upload `dist/` artifact (no deploy)
+- Production deploy: `.github/workflows/deploy-pages.yml`
