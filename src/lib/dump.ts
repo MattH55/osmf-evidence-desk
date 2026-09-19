@@ -7,6 +7,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { entityHref } from './ids';
 
 /** Locked for MVP — bump deliberately when Desk supports a new dump schema. */
 export const SUPPORTED_SCHEMA_VERSION = '0.1.0';
@@ -255,4 +256,30 @@ export function getEntityLabel(id: string): string {
 /** Absolute path to the dump file (for docs / debugging). */
 export function getDumpPath(): string {
   return DUMP_PATH;
+}
+
+/** Compact row for client-side entity filter (/search). */
+export interface EntitySearchEntry {
+  id: string;
+  type: string;
+  label: string;
+  aliases: string[];
+  href: string;
+}
+
+/**
+ * Build-time entity list for the minimal /search filter (ED-6).
+ * Sorted by label; includes aliases for substring matching.
+ * ED-8 can replace this with a proper search index later.
+ */
+export function getEntitySearchIndex(): EntitySearchEntry[] {
+  return getDump()
+    .entities.map((e) => ({
+      id: e.id,
+      type: e.type,
+      label: e.label,
+      aliases: e.aliases ?? [],
+      href: entityHref(e.id),
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label));
 }

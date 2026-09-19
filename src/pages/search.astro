@@ -1,0 +1,116 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getEntitySearchIndex, getMeta } from '../lib/dump';
+
+const meta = getMeta();
+const entities = getEntitySearchIndex();
+const indexJson = JSON.stringify(entities);
+---
+
+<BaseLayout
+  title="Search — Evidence Desk"
+  description="Filter entities from the OSMF Shared Evidence Graph dump by label or alias."
+>
+  <h1 class="page-title">Search entities</h1>
+  <p class="lede">
+    Minimal client-side filter over every entity label and alias in the current
+    dump. Full-text / MiniSearch landing in <strong>ED-8</strong>; this page
+    satisfies the ED-6 “Search” CTA without stealing that scope.
+  </p>
+  <p class="section-note">
+    Dump schema <code>{meta.schema_version}</code> ·
+    <time datetime={meta.generated_at}>{meta.generated_at}</time> ·
+    {entities.length} entities
+  </p>
+
+  <div class="search-panel" data-search-root>
+    <label class="search-label" for="entity-filter">
+      Filter by label, alias, id, or type
+    </label>
+    <input
+      id="entity-filter"
+      class="search-input"
+      type="search"
+      name="q"
+      autocomplete="off"
+      placeholder="e.g. Long COVID, POTS, biomarker…"
+      data-search-input
+    />
+    <p class="search-status" data-search-status aria-live="polite"></p>
+    <ul class="search-results" data-search-results>
+      {
+        entities.map((e) => (
+          <li
+            class="search-results__item"
+            data-id={e.id}
+            data-type={e.type}
+            data-label={e.label}
+            data-aliases={(e.aliases ?? []).join(' | ')}
+          >
+            <a class="search-results__label" href={e.href}>
+              {e.label}
+            </a>
+            <span class="search-results__type">{e.type}</span>
+            <code class="search-results__id">{e.id}</code>
+            {
+              e.aliases.length > 0 ? (
+                <span class="search-results__aliases">
+                  Also: {e.aliases.join(', ')}
+                </span>
+              ) : null
+            }
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+
+  <script define:vars={{ indexJson }}>
+    const root = document.querySelector('[data-search-root]');
+    if (!root) throw new Error('search root missing');
+    const input = root.querySelector('[data-search-input]');
+    const status = root.querySelector('[data-search-status]');
+    const list = root.querySelector('[data-search-results]');
+    /** @type {Array<{id:string,type:string,label:string,aliases:string[],href:string}>} */
+    const index = JSON.parse(indexJson);
+    const items = Array.from(list.querySelectorAll('.search-results__item'));
+
+    function normalize(s) {
+      return String(s || '')
+        .toLowerCase()
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function matches(entry, q) {
+      if (!q) return true;
+      const hay = normalize(
+        [entry.label, entry.id, entry.type, ...(entry.aliases || [])].join(' '),
+      );
+      return hay.includes(q);
+    }
+
+    function render() {
+      const q = normalize(input.value.trim());
+      let shown = 0;
+      for (const li of items) {
+        const id = li.getAttribute('data-id');
+        const entry = index.find((e) => e.id === id);
+        const ok = entry ? matches(entry, q) : false;
+        li.hidden = !ok;
+        if (ok) shown += 1;
+      }
+      if (!q) {
+        status.textContent = `Showing all ${shown} entities.`;
+      } else {
+        status.textContent =
+          shown === 0
+            ? `No entities match “${input.value.trim()}”.`
+            : `Showing ${shown} of ${index.length} entities.`;
+      }
+    }
+
+    input.addEventListener('input', render);
+    render();
+  </script>
+</BaseLayout>

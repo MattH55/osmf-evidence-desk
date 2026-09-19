@@ -9,20 +9,39 @@ const seedConditions = getSeedConditions();
 
 <BaseLayout
   title="Evidence Desk"
-  description="Browse seed conditions and claims from the OSMF Shared Evidence Graph."
+  description="Browse seed conditions and claims from the OSMF Shared Evidence Graph. Not medical advice."
 >
-  <h1 class="page-title">Evidence Desk</h1>
-  <p class="lede">
-    Search-and-browse UI for the OSMF Shared Evidence Graph. Seed conditions
-    below come from the build-time dump
-    (<code>meta.schema_version</code> {meta.schema_version}).
-  </p>
+  <section class="home-hero" aria-labelledby="home-heading">
+    <h1 class="page-title" id="home-heading">Evidence Desk</h1>
+    <p class="lede">
+      A search-and-browse UI for the
+      <a href="https://github.com/MattH55/osmf-evidence-graph">OSMF Shared Evidence Graph</a>
+      — conditions, biomarkers, agents, trials, papers, and claims with provenance
+      and evidence tiers.
+    </p>
+    <p class="home-policy">
+      <strong>Not medical advice.</strong> Desk surfaces structured research for
+      exploration and transparency. It is not diagnosis, treatment guidance, or a
+      substitute for clinical care. See <a href="/about">About</a> for tiers,
+      citation, and license.
+    </p>
+    <div class="home-cta">
+      <a class="btn btn--primary" href="/search">Search entities</a>
+      <a class="btn btn--secondary" href="/about">About / cite</a>
+      <a class="btn btn--secondary" href="/download">Dump info</a>
+    </div>
+    <p class="home-meta">
+      Schema <code>{meta.schema_version}</code>
+      · generated <time datetime={meta.generated_at}>{meta.generated_at}</time>
+      · license {meta.license}
+    </p>
+  </section>
 
   <section class="seed-conditions" aria-labelledby="seed-conditions-heading">
-    <h2 id="seed-conditions-heading" class="section-title">Seed conditions</h2>
+    <h2 id="seed-conditions-heading" class="section-title">Featured seed conditions</h2>
     <p class="section-note">
-      Each condition links to its entity page (<code>/entity/…</code>). Deep
-      links are stable for a given entity id across builds.
+      From <code>meta.seed_conditions</code> in the build-time dump. Each link
+      opens the entity desk view (<code>/entity/…</code>).
     </p>
     {
       seedConditions.length === 0 ? (
@@ -41,9 +60,4 @@ const seedConditions = getSeedConditions();
       )
     }
   </section>
-
-  <p>
-    See <a href="/about">About</a> for soft-launch / example-data policy and the
-    not-medical-advice notice.
-  </p>
 </BaseLayout>

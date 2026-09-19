@@ -22,7 +22,9 @@ const {
 
 const pathname = Astro.url.pathname;
 const isHome = pathname === '/' || pathname === '/index.html';
+const isSearch = pathname.startsWith('/search');
 const isAbout = pathname.startsWith('/about');
+const isDownload = pathname.startsWith('/download');
 ---
 
 <!doctype html>
@@ -46,7 +48,20 @@ const isAbout = pathname.startsWith('/about');
                 <a href="/" aria-current={isHome ? 'page' : undefined}>Home</a>
               </li>
               <li>
-                <a href="/about" aria-current={isAbout ? 'page' : undefined}>About</a>
+                <a href="/search" aria-current={isSearch ? 'page' : undefined}
+                  >Search</a
+                >
+              </li>
+              <li>
+                <a href="/about" aria-current={isAbout ? 'page' : undefined}
+                  >About</a
+                >
+              </li>
+              <li>
+                <a
+                  href="/download"
+                  aria-current={isDownload ? 'page' : undefined}>Download</a
+                >
               </li>
             </ul>
           </nav>
