@@ -75,10 +75,16 @@ function copyDump() {
   console.log(`Copied dump → ${path.relative(ROOT, DUMP_DEST)}`);
 }
 
+function buildSearchIndex() {
+  console.log('Building entity search index…');
+  run('node', [path.join(ROOT, 'scripts', 'build-search-index.mjs')], { cwd: ROOT });
+}
+
 function main() {
   ensureGraphCache();
   buildDump();
   copyDump();
+  buildSearchIndex();
   console.log('fetch-dump complete.');
 }
 

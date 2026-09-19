@@ -9,10 +9,12 @@
     "fetch-dump": "node scripts/fetch-dump.mjs",
     "prebuild": "node scripts/fetch-dump.mjs",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "build-search-index": "node scripts/build-search-index.mjs"
   },
   "dependencies": {
-    "astro": "^5.1.0"
+    "astro": "^5.1.0",
+    "minisearch": "^7.2.0"
   },
   "devDependencies": {
     "typescript": "^5.7.0"

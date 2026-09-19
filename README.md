@@ -2,7 +2,7 @@
 
 Search-and-browse app for the [OSMF Shared Evidence Graph](https://github.com/MattH55/osmf-evidence-graph) — conditions, biomarkers, agents, trials, papers, and claims with provenance and evidence tiers.
 
-**Status:** ED-6 home + ED-7 about (Astro + TypeScript, static output).
+**Status:** ED-8 entity search (Astro + TypeScript, static output).
 
 **Production host (planned):** [desk.opensourcemed.info](https://desk.opensourcemed.info) — DNS/deploy in ED-17.
 
@@ -31,7 +31,7 @@ npm run build        # runs fetch-dump via prebuild, then astro build
 
 **Schema gate:** only `meta.schema_version` `"0.1.0"` is accepted today. Unsupported or missing dumps abort `astro build`.
 
-**Helpers:** `getDump()`, `getMeta()`, `getAllEntities()`, `getEntity(id)`, `getAllClaims()`, `getClaim(id)`, `getClaimsForEntity(id)`, `getRelatedEntities(id)`, `getSeedConditions()`, `getEntitiesByType(type)`.
+**Helpers:** `getDump()`, `getMeta()`, `getAllEntities()`, `getEntity(id)`, `getAllClaims()`, `getClaim(id)`, `getClaimsForEntity(id)`, `getRelatedEntities(id)`, `getSeedConditions()`, `getEntitiesByType(type)`, `getEntitySearchIndex()`.
 
 When EG-8 publishes a public dump artifact, prefer fetching that URL and drop the clone+build coupling (see [DECISIONS.md](./DECISIONS.md)).
 
@@ -73,12 +73,32 @@ Every dump claim gets a static page at build time via `getStaticPaths`.
 | Piece | Role |
 |-------|------|
 | `/` | One-screen explainer, not-advice notice, featured `meta.seed_conditions`, CTA to Search / About / Download |
-| `/search` | Minimal client-side filter over dump entity labels + aliases (`getEntitySearchIndex`); ED-8 can upgrade later |
+| `/search` | Entity search (upgraded in ED-8 — see below) |
 | `/about` | Not-advice policy, `TierLegend` (aligned with graph `SCHEMA.md`), citation example (entity id + Desk URL + `generated_at`), CC-BY-4.0 license, links to graph repo + SCHEMA.md raw |
 | `/download` | Dump meta (`schema_version`, `generated_at`, `is_example`, license) + `fetch-dump` instructions (ED-15 expands) |
-| Nav | Home · Search · About · Download |
+| Nav | Home · Search · About · Download (+ header search form) |
 
 Example-data banner remains driven by `meta.is_example` (unchanged).
+
+## Search (ED-8)
+
+Compile-time entity index + client MiniSearch. **No claim full-text** in MVP.
+
+| Piece | Role |
+|-------|------|
+| `scripts/build-search-index.mjs` | Reads `data/dump/latest.json`, writes `public/search-index.json` (labels, aliases, id, type, href + seed suggestions) |
+| `npm run build-search-index` | Standalone index build (also runs at the end of `fetch-dump` / `prebuild`) |
+| `public/search-index.json` | Generated artifact (gitignored); copied into `dist/` on `astro build` |
+| `/search?q=` | MiniSearch over `label` + `aliases` + `id`; results **grouped by entity type**; empty query and zero-hit states show seed suggestions |
+| Header form | `GET /search?q=` (works without JS for navigation; search page enhances with MiniSearch) |
+| Homepage CTA | Links to `/search` (optional `?q=` supported) |
+
+**Alias matching:** MiniSearch indexes each entity’s `aliases[]` (joined for indexing). Example: query `PASC` matches **Long COVID** because `PASC` is an alias on `osmf:condition:long-covid`.
+
+```bash
+npm run fetch-dump          # dump + search-index.json
+npm run build-search-index  # index only (dump must already exist)
+```
 
 ## Develop
 

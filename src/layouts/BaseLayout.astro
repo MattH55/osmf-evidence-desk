@@ -65,6 +65,24 @@ const isDownload = pathname.startsWith('/download');
               </li>
             </ul>
           </nav>
+          <form
+            class="site-search"
+            action="/search"
+            method="get"
+            role="search"
+            aria-label="Search entities"
+          >
+            <label class="visually-hidden" for="site-search-q">Search entities</label>
+            <input
+              id="site-search-q"
+              class="site-search__input"
+              type="search"
+              name="q"
+              placeholder="Search entities…"
+              autocomplete="off"
+            />
+            <button class="site-search__submit" type="submit">Search</button>
+          </form>
         </div>
       </header>
       <main class="site-main" id="main">

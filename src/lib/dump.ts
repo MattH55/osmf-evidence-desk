@@ -258,7 +258,7 @@ export function getDumpPath(): string {
   return DUMP_PATH;
 }
 
-/** Compact row for client-side entity filter (/search). */
+/** Compact row for entity search index entries. */
 export interface EntitySearchEntry {
   id: string;
   type: string;
@@ -268,9 +268,9 @@ export interface EntitySearchEntry {
 }
 
 /**
- * Build-time entity list for the minimal /search filter (ED-6).
- * Sorted by label; includes aliases for substring matching.
- * ED-8 can replace this with a proper search index later.
+ * Build-time entity list for search index generation and SSR helpers (ED-8).
+ * Sorted by label; includes aliases. Prefer `public/search-index.json`
+ * (from `npm run build-search-index`) for the client MiniSearch index.
  */
 export function getEntitySearchIndex(): EntitySearchEntry[] {
   return getDump()
