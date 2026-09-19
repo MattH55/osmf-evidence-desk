@@ -1185,3 +1185,55 @@ img {
   margin: 0;
   font-size: 0.9375rem;
 }
+
+/* Entity export actions (ED-9 / ED-10 / ED-11) */
+.entity-export {
+  margin: var(--space-xl) 0 var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.entity-export__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin: var(--space-md) 0 var(--space-sm);
+}
+
+.entity-export__actions .btn {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.entity-export__bib-note {
+  margin: 0 0 var(--space-sm);
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+}
+
+.entity-export__status {
+  margin: 0;
+  min-height: 1.25em;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.cite-snippet {
+  margin: 0 0 var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  overflow-x: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-primary);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.cite-snippet code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  white-space: pre;
+}
