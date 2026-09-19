@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getMeta, getSeedConditions } from '../lib/dump';
+import { entityHref } from '../lib/ids';
 
 const meta = getMeta();
 const seedConditions = getSeedConditions();
@@ -20,8 +21,8 @@ const seedConditions = getSeedConditions();
   <section class="seed-conditions" aria-labelledby="seed-conditions-heading">
     <h2 id="seed-conditions-heading" class="section-title">Seed conditions</h2>
     <p class="section-note">
-      Entity detail pages land in ED-4. Labels and ids are listed here from the
-      dump without placeholder routes that would 404.
+      Each condition links to its entity page (<code>/entity/…</code>). Deep
+      links are stable for a given entity id across builds.
     </p>
     {
       seedConditions.length === 0 ? (
@@ -30,7 +31,9 @@ const seedConditions = getSeedConditions();
         <ul class="seed-list">
           {seedConditions.map((c) => (
             <li>
-              <span class="seed-list__label">{c.label}</span>
+              <a class="seed-list__label" href={entityHref(c.id)}>
+                {c.label}
+              </a>
               <code class="seed-list__id">{c.id}</code>
             </li>
           ))}

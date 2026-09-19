@@ -1,19 +1,34 @@
 ---
 /**
- * Presentational claim card for desk chrome (ED-3).
+ * Presentational claim card for desk chrome (ED-3 / ED-4).
  * Tiers C/D always show `limitations` inline when present — never behind
  * <details> or a click toggle.
  */
 import TierBadge from './TierBadge.astro';
 import ClaimStatusChip from './ClaimStatusChip.astro';
 
+export interface ClaimSourceLink {
+  type?: string;
+  value?: string;
+  label?: string;
+}
+
 interface Props {
   id?: string;
-  statement: string;
+  /** Free-text statement; optional when subject/predicate/object are provided. */
+  statement?: string;
   tier: 'A' | 'B' | 'C' | 'D';
   status: 'draft' | 'published' | 'superseded';
+  /** Legacy placeholder string (ED-3 preview). Prefer `sources`. */
   sourcesPlaceholder?: string;
+  sources?: ClaimSourceLink[];
   limitations?: string;
+  reviewed_at?: string;
+  subjectLabel?: string;
+  subjectHref?: string;
+  predicate?: string;
+  objectLabel?: string;
+  objectHref?: string;
 }
 
 const {
@@ -21,14 +36,47 @@ const {
   statement,
   tier,
   status,
-  sourcesPlaceholder = 'Sources (placeholder — ED-4/ED-5)',
+  sourcesPlaceholder,
+  sources,
   limitations,
+  reviewed_at,
+  subjectLabel,
+  subjectHref,
+  predicate,
+  objectLabel,
+  objectHref,
 } = Astro.props;
 
 const limitationsText =
   typeof limitations === 'string' ? limitations.trim() : '';
 const isLowTier = tier === 'C' || tier === 'D';
 const showLimitations = limitationsText.length > 0;
+
+const hasSpo = Boolean(subjectLabel || predicate || objectLabel);
+const sourceList = Array.isArray(sources) ? sources : [];
+const hasRealSources = sourceList.length > 0;
+
+function sourceHref(s: ClaimSourceLink): string | undefined {
+  if (!s.value) return undefined;
+  if (/^https?:\/\//i.test(s.value)) return s.value;
+  if (s.type === 'doi' && !s.value.startsWith('http')) {
+    return `https://doi.org/${s.value.replace(/^doi:/i, '')}`;
+  }
+  if (s.type === 'pmid' && /^\d+$/.test(s.value)) {
+    return `https://pubmed.ncbi.nlm.nih.gov/${s.value}/`;
+  }
+  return undefined;
+}
+
+function sourceText(s: ClaimSourceLink): string {
+  return s.label || s.value || s.type || 'Source';
+}
+
+function formatReviewedAt(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toISOString().slice(0, 10);
+}
 ---
 
 <article class="claim-card" data-tier={tier} data-status={status}>
@@ -39,11 +87,74 @@ const showLimitations = limitationsText.length > 0;
     </div>
     {id && <code class="claim-card__id">{id}</code>}
   </header>
-  <p class="claim-card__statement">{statement}</p>
+
+  {
+    hasSpo ? (
+      <p class="claim-card__spo">
+        {subjectLabel &&
+          (subjectHref ? (
+            <a class="claim-card__entity-link" href={subjectHref}>
+              {subjectLabel}
+            </a>
+          ) : (
+            <span class="claim-card__entity-text">{subjectLabel}</span>
+          ))}
+        {predicate && (
+          <span class="claim-card__predicate">
+            <code>{predicate}</code>
+          </span>
+        )}
+        {objectLabel &&
+          (objectHref ? (
+            <a class="claim-card__entity-link" href={objectHref}>
+              {objectLabel}
+            </a>
+          ) : (
+            <span class="claim-card__entity-text">{objectLabel}</span>
+          ))}
+      </p>
+    ) : null
+  }
+
+  {statement && <p class="claim-card__statement">{statement}</p>}
+
   <p class="claim-card__sources">
     <span class="claim-card__sources-label">Sources</span>
-    {sourcesPlaceholder}
+    {
+      hasRealSources ? (
+        <span class="claim-card__sources-list">
+          {sourceList.map((s, i) => {
+            const href = sourceHref(s);
+            const text = sourceText(s);
+            return (
+              <>
+                {i > 0 && <span aria-hidden="true"> · </span>}
+                {href ? (
+                  <a href={href} rel="noopener noreferrer">
+                    {text}
+                  </a>
+                ) : (
+                  <span>{text}</span>
+                )}
+              </>
+            );
+          })}
+        </span>
+      ) : (
+        sourcesPlaceholder ?? 'No sources listed'
+      )
+    }
   </p>
+
+  {
+    reviewed_at && (
+      <p class="claim-card__reviewed">
+        <span class="claim-card__reviewed-label">Reviewed</span>
+        <time datetime={reviewed_at}>{formatReviewedAt(reviewed_at)}</time>
+      </p>
+    )
+  }
+
   {
     showLimitations && (
       <div

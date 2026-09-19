@@ -2,7 +2,7 @@
 
 Search-and-browse app for the [OSMF Shared Evidence Graph](https://github.com/MattH55/osmf-evidence-graph) — conditions, biomarkers, agents, trials, papers, and claims with provenance and evidence tiers.
 
-**Status:** ED-3 tier chrome (Astro + TypeScript, static output). Entity pages are ED-4.
+**Status:** ED-4 entity pages (Astro + TypeScript, static output). Claim detail pages are ED-5.
 
 **Production host (planned):** [desk.opensourcemed.info](https://desk.opensourcemed.info) — DNS/deploy in ED-17.
 
@@ -31,13 +31,27 @@ npm run build        # runs fetch-dump via prebuild, then astro build
 
 **Schema gate:** only `meta.schema_version` `"0.1.0"` is accepted today. Unsupported or missing dumps abort `astro build`.
 
-**Helpers:** `getDump()`, `getMeta()`, `getSeedConditions()`, `getEntitiesByType(type)`.
+**Helpers:** `getDump()`, `getMeta()`, `getAllEntities()`, `getEntity(id)`, `getClaimsForEntity(id)`, `getRelatedEntities(id)`, `getSeedConditions()`, `getEntitiesByType(type)`.
 
 When EG-8 publishes a public dump artifact, prefer fetching that URL and drop the clone+build coupling (see [DECISIONS.md](./DECISIONS.md)).
 
 ## Tier chrome (ED-3)
 
-Shared UI: `TierBadge`, `ClaimStatusChip`, `ClaimCard`, `TierLegend` under `src/components/`. C/D limitations always render inline. Preview: `/dev/claim-preview` (temporary until ED-4/ED-5).
+Shared UI: `TierBadge`, `ClaimStatusChip`, `ClaimCard`, `TierLegend` under `src/components/`. C/D limitations always render inline. Preview: `/dev/claim-preview` (temporary until ED-5).
+
+## Entity pages (ED-4)
+
+Every dump entity gets a static page at build time via `getStaticPaths`.
+
+| Piece | Role |
+|-------|------|
+| `src/lib/ids.ts` | `entityIdToPath`, `pathPartsToEntityId`, `entityHref` — reversible `osmf:condition:pacvs` ↔ `/entity/osmf/condition/pacvs` |
+| `src/pages/entity/[...id].astro` | One HTML page per dump entity: summary, aliases, external IDs, outbound `urls[]`, claims in/out, superseded history, one-hop related entities |
+| Homepage seed list | Links to real entity pages via `entityHref` |
+
+**404:** Only entities present in the dump are generated. Requests to unknown ids (paths not in `dist/`) 404 naturally on static hosts. Deep links for the same entity id stay stable across builds.
+
+**URL scheme:** split the `osmf:` id on `:`, join with `/` under `/entity/`. Example: `osmf:condition:pacvs` → `/entity/osmf/condition/pacvs`.
 
 ## Develop
 
