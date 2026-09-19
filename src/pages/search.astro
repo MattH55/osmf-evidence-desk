@@ -1,116 +1,363 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getEntitySearchIndex, getMeta } from '../lib/dump';
+import { getMeta, getSeedConditions } from '../lib/dump';
+import { entityHref } from '../lib/ids';
 
 const meta = getMeta();
-const entities = getEntitySearchIndex();
-const indexJson = JSON.stringify(entities);
+const seedConditions = getSeedConditions();
+const initialQ = Astro.url.searchParams.get('q') ?? '';
+const seedJson = JSON.stringify(
+  seedConditions.map((c) => ({
+    id: c.id,
+    label: c.label,
+    href: entityHref(c.id),
+  })),
+);
 ---
 
 <BaseLayout
   title="Search — Evidence Desk"
-  description="Filter entities from the OSMF Shared Evidence Graph dump by label or alias."
+  description="Search entities from the OSMF Shared Evidence Graph by label, alias, or id."
 >
   <h1 class="page-title">Search entities</h1>
   <p class="lede">
-    Minimal client-side filter over every entity label and alias in the current
-    dump. Full-text / MiniSearch landing in <strong>ED-8</strong>; this page
-    satisfies the ED-6 “Search” CTA without stealing that scope.
+    Client-side MiniSearch over entity labels, aliases, and ids from the current
+    dump. Results are grouped by entity type. Claim full-text is out of scope
+    for MVP.
   </p>
   <p class="section-note">
     Dump schema <code>{meta.schema_version}</code> ·
-    <time datetime={meta.generated_at}>{meta.generated_at}</time> ·
-    {entities.length} entities
+    <time datetime={meta.generated_at}>{meta.generated_at}</time>
   </p>
 
-  <div class="search-panel" data-search-root>
-    <label class="search-label" for="entity-filter">
-      Filter by label, alias, id, or type
-    </label>
-    <input
-      id="entity-filter"
-      class="search-input"
-      type="search"
-      name="q"
-      autocomplete="off"
-      placeholder="e.g. Long COVID, POTS, biomarker…"
-      data-search-input
-    />
+  <div
+    class="search-panel"
+    data-search-root
+    data-initial-q={initialQ}
+    data-index-url="/search-index.json"
+  >
+    <form class="search-form" action="/search" method="get" role="search">
+      <label class="search-label" for="entity-filter">
+        Search by label, alias, or id
+      </label>
+      <div class="search-form__row">
+        <input
+          id="entity-filter"
+          class="search-input"
+          type="search"
+          name="q"
+          value={initialQ}
+          autocomplete="off"
+          placeholder="e.g. PASC, POTS, PEM…"
+          data-search-input
+        />
+        <button class="btn btn--primary search-form__submit" type="submit">
+          Search
+        </button>
+      </div>
+    </form>
+
     <p class="search-status" data-search-status aria-live="polite"></p>
-    <ul class="search-results" data-search-results>
-      {
-        entities.map((e) => (
-          <li
-            class="search-results__item"
-            data-id={e.id}
-            data-type={e.type}
-            data-label={e.label}
-            data-aliases={(e.aliases ?? []).join(' | ')}
-          >
-            <a class="search-results__label" href={e.href}>
-              {e.label}
-            </a>
-            <span class="search-results__type">{e.type}</span>
-            <code class="search-results__id">{e.id}</code>
-            {
-              e.aliases.length > 0 ? (
-                <span class="search-results__aliases">
-                  Also: {e.aliases.join(', ')}
-                </span>
-              ) : null
-            }
-          </li>
-        ))
-      }
-    </ul>
+    <div class="search-empty" data-search-empty hidden></div>
+    <div class="search-groups" data-search-groups></div>
   </div>
 
-  <script define:vars={{ indexJson }}>
+  <noscript>
+    <div class="search-noscript">
+      <p>
+        JavaScript is required for live MiniSearch results. Seed conditions
+        (no JS):
+      </p>
+      <ul class="seed-list">
+        {
+          seedConditions.map((c) => (
+            <li>
+              <a class="seed-list__label" href={entityHref(c.id)}>
+                {c.label}
+              </a>
+              <code class="seed-list__id">{c.id}</code>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </noscript>
+
+  <script define:vars={{ seedJson }}>
+    // Seed suggestions for empty / no-result states (also in search-index.json).
+    window.__ED_SEED_SUGGESTIONS__ = JSON.parse(seedJson);
+  </script>
+  <script>
+    import MiniSearch from 'minisearch';
+
+    const TYPE_ORDER = [
+      'condition',
+      'phenotype',
+      'biomarker',
+      'agent',
+      'diagnostic-criterion',
+      'specimen-type',
+      'trial',
+      'paper',
+    ];
+
+    const TRY_ALIASES = ['PACVS', 'PEM', 'POTS', 'PASC'];
+
     const root = document.querySelector('[data-search-root]');
     if (!root) throw new Error('search root missing');
-    const input = root.querySelector('[data-search-input]');
+
+    const input = /** @type {HTMLInputElement} */ (
+      root.querySelector('[data-search-input]')
+    );
     const status = root.querySelector('[data-search-status]');
-    const list = root.querySelector('[data-search-results]');
-    /** @type {Array<{id:string,type:string,label:string,aliases:string[],href:string}>} */
-    const index = JSON.parse(indexJson);
-    const items = Array.from(list.querySelectorAll('.search-results__item'));
+    const emptyEl = root.querySelector('[data-search-empty]');
+    const groupsEl = root.querySelector('[data-search-groups]');
+    const indexUrl = root.getAttribute('data-index-url') || '/search-index.json';
+    const initialQ = root.getAttribute('data-initial-q') || '';
 
-    function normalize(s) {
-      return String(s || '')
-        .toLowerCase()
-        .normalize('NFKD')
-        .replace(/[\u0300-\u036f]/g, '');
+    /** @type {Array<{id:string,label:string,href:string}>} */
+    const seedFallback =
+      typeof window.__ED_SEED_SUGGESTIONS__ !== 'undefined'
+        ? window.__ED_SEED_SUGGESTIONS__
+        : [];
+
+    /**
+     * @param {string} type
+     */
+    function typeRank(type) {
+      const i = TYPE_ORDER.indexOf(type);
+      return i === -1 ? TYPE_ORDER.length : i;
     }
 
-    function matches(entry, q) {
-      if (!q) return true;
-      const hay = normalize(
-        [entry.label, entry.id, entry.type, ...(entry.aliases || [])].join(' '),
+    /**
+     * @param {Array<{id:string,label:string,href:string}>} seeds
+     * @param {string} [heading]
+     */
+    function renderSuggestions(seeds, heading = 'Suggested seed conditions') {
+      const links = seeds
+        .map(
+          (s) =>
+            `<li><a href="${escapeAttr(s.href)}">${escapeHtml(s.label)}</a></li>`,
+        )
+        .join('');
+      const tryLinks = TRY_ALIASES.map(
+        (q) =>
+          `<a href="/search?q=${encodeURIComponent(q)}">${escapeHtml(q)}</a>`,
+      ).join(', ');
+      return `
+        <div class="search-suggestions">
+          <p class="search-suggestions__heading">${escapeHtml(heading)}</p>
+          <ul class="search-suggestions__list">${links}</ul>
+          <p class="search-suggestions__try">
+            Try ${tryLinks}
+          </p>
+        </div>
+      `;
+    }
+
+    /**
+     * @param {string} s
+     */
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    /**
+     * @param {string} s
+     */
+    function escapeAttr(s) {
+      return escapeHtml(s).replace(/'/g, '&#39;');
+    }
+
+    /**
+     * @param {Array<{id:string,type:string,label:string,aliases:string[],href:string}>} docs
+     */
+    function groupByType(docs) {
+      /** @type {Map<string, typeof docs>} */
+      const map = new Map();
+      for (const d of docs) {
+        const list = map.get(d.type) || [];
+        list.push(d);
+        map.set(d.type, list);
+      }
+      return [...map.entries()].sort(
+        ([a], [b]) => typeRank(a) - typeRank(b) || a.localeCompare(b),
       );
-      return hay.includes(q);
     }
 
-    function render() {
-      const q = normalize(input.value.trim());
-      let shown = 0;
-      for (const li of items) {
-        const id = li.getAttribute('data-id');
-        const entry = index.find((e) => e.id === id);
-        const ok = entry ? matches(entry, q) : false;
-        li.hidden = !ok;
-        if (ok) shown += 1;
+    /**
+     * @param {Array<{id:string,type:string,label:string,aliases:string[],href:string}>} docs
+     */
+    function renderGroups(docs) {
+      if (!groupsEl) return;
+      const groups = groupByType(docs);
+      groupsEl.innerHTML = groups
+        .map(([type, items]) => {
+          const lis = items
+            .map((e) => {
+              const aliases =
+                e.aliases && e.aliases.length
+                  ? `<span class="search-results__aliases">Also: ${escapeHtml(e.aliases.join(', '))}</span>`
+                  : '';
+              return `
+                <li class="search-results__item">
+                  <a class="search-results__label" href="${escapeAttr(e.href)}">${escapeHtml(e.label)}</a>
+                  <span class="search-results__type">${escapeHtml(e.type)}</span>
+                  <code class="search-results__id">${escapeHtml(e.id)}</code>
+                  ${aliases}
+                </li>`;
+            })
+            .join('');
+          return `
+            <section class="search-group" aria-labelledby="search-type-${escapeAttr(type)}">
+              <h2 class="search-group__title" id="search-type-${escapeAttr(type)}">
+                ${escapeHtml(type)}
+                <span class="search-group__count">${items.length}</span>
+              </h2>
+              <ul class="search-results">${lis}</ul>
+            </section>`;
+        })
+        .join('');
+    }
+
+    /**
+     * @param {MiniSearch} mini
+     * @param {Array<{id:string,type:string,label:string,aliases:string[],href:string}>} documents
+     * @param {Array<{id:string,label:string,href:string}>} suggestions
+     */
+    function bindSearch(mini, documents, suggestions) {
+      const byId = new Map(documents.map((d) => [d.id, d]));
+
+      function run() {
+        const raw = input.value.trim();
+        const q = raw;
+
+        // Keep URL in sync for shareable links (no full navigation).
+        const url = new URL(window.location.href);
+        if (q) url.searchParams.set('q', q);
+        else url.searchParams.delete('q');
+        window.history.replaceState({}, '', url.pathname + url.search);
+
+        if (!q) {
+          if (groupsEl) groupsEl.innerHTML = '';
+          if (emptyEl) {
+            emptyEl.hidden = false;
+            emptyEl.innerHTML = `
+              <p class="search-empty__prompt">
+                Type a label, alias, or id to search ${documents.length} entities.
+              </p>
+              ${renderSuggestions(suggestions)}
+            `;
+          }
+          if (status) {
+            status.textContent = 'Enter a query to search entities.';
+          }
+          return;
+        }
+
+        const hits = mini.search(q, {
+          prefix: true,
+          fuzzy: 0.2,
+          combineWith: 'AND',
+        });
+
+        /** @type {typeof documents} */
+        const matched = [];
+        for (const hit of hits) {
+          const doc = byId.get(hit.id);
+          if (doc) matched.push(doc);
+        }
+
+        if (matched.length === 0) {
+          if (groupsEl) groupsEl.innerHTML = '';
+          if (emptyEl) {
+            emptyEl.hidden = false;
+            emptyEl.innerHTML = `
+              <p class="search-empty__prompt">
+                No entities match “${escapeHtml(raw)}”.
+              </p>
+              ${renderSuggestions(suggestions, 'Try a seed condition or alias')}
+            `;
+          }
+          if (status) {
+            status.textContent = `No results for “${raw}”.`;
+          }
+          return;
+        }
+
+        if (emptyEl) {
+          emptyEl.hidden = true;
+          emptyEl.innerHTML = '';
+        }
+        renderGroups(matched);
+        if (status) {
+          status.textContent = `${matched.length} result${matched.length === 1 ? '' : 's'} for “${raw}”.`;
+        }
       }
-      if (!q) {
-        status.textContent = `Showing all ${shown} entities.`;
-      } else {
-        status.textContent =
-          shown === 0
-            ? `No entities match “${input.value.trim()}”.`
-            : `Showing ${shown} of ${index.length} entities.`;
+
+      input.addEventListener('input', run);
+      // Form GET still works; prevent full reload when JS is active.
+      const form = root.querySelector('.search-form');
+      if (form) {
+        form.addEventListener('submit', (ev) => {
+          ev.preventDefault();
+          run();
+          input.focus();
+        });
+      }
+
+      if (initialQ && !input.value) input.value = initialQ;
+      run();
+    }
+
+    async function boot() {
+      if (status) status.textContent = 'Loading search index…';
+      try {
+        const res = await fetch(indexUrl);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const payload = await res.json();
+        const documents = payload.documents || [];
+        const suggestions =
+          Array.isArray(payload.suggestions) && payload.suggestions.length
+            ? payload.suggestions
+            : seedFallback;
+
+        const mini = new MiniSearch({
+          fields: ['label', 'aliases', 'id'],
+          storeFields: ['id', 'type', 'label', 'aliases', 'href'],
+          idField: 'id',
+          extractField: (document, fieldName) => {
+            const value = document[fieldName];
+            if (fieldName === 'aliases') {
+              return Array.isArray(value) ? value.join(' ') : String(value || '');
+            }
+            return value == null ? '' : String(value);
+          },
+          searchOptions: {
+            boost: { label: 2, aliases: 1.5, id: 1 },
+            prefix: true,
+            fuzzy: 0.2,
+          },
+        });
+        mini.addAll(documents);
+        bindSearch(mini, documents, suggestions);
+      } catch (err) {
+        console.error(err);
+        if (status) {
+          status.textContent =
+            'Could not load search index. Run npm run fetch-dump (or build-search-index) and rebuild.';
+        }
+        if (emptyEl) {
+          emptyEl.hidden = false;
+          emptyEl.innerHTML = renderSuggestions(seedFallback);
+        }
       }
     }
 
-    input.addEventListener('input', render);
-    render();
+    boot();
   </script>
 </BaseLayout>

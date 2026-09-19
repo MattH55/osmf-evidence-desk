@@ -113,6 +113,51 @@ img {
   text-underline-offset: 0.2em;
 }
 
+.site-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-left: auto;
+}
+
+.site-search__input {
+  min-width: 10rem;
+  width: min(14rem, 40vw);
+  padding: 0.4rem 0.65rem;
+  font: inherit;
+  font-size: 0.875rem;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.15);
+  color: #fff;
+}
+
+.site-search__input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.site-search__input:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.site-search__submit {
+  padding: 0.4rem 0.75rem;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  cursor: pointer;
+}
+
+.site-search__submit:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
 .site-main {
   padding-block: var(--space-xl);
   flex: 1;
@@ -1013,6 +1058,70 @@ img {
   grid-area: aliases;
   font-size: 0.8125rem;
   color: var(--color-muted);
+}
+
+.search-form__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.search-form__submit {
+  flex-shrink: 0;
+}
+
+.search-group {
+  margin-top: var(--space-lg);
+}
+
+.search-group__title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  margin: 0 0 var(--space-sm);
+  font-size: 1rem;
+  text-transform: capitalize;
+}
+
+.search-group__count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  text-transform: none;
+}
+
+.search-empty {
+  margin: var(--space-md) 0;
+  padding: var(--space-md);
+  border: 1px dashed var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+}
+
+.search-empty__prompt {
+  margin: 0 0 var(--space-md);
+}
+
+.search-suggestions__heading {
+  margin: 0 0 var(--space-sm);
+  font-weight: 700;
+  font-size: 0.9375rem;
+}
+
+.search-suggestions__list {
+  margin: 0 0 var(--space-md);
+  padding-left: 1.25rem;
+}
+
+.search-suggestions__try {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+
+.search-noscript {
+  margin-top: var(--space-lg);
 }
 
 .meta-grid {

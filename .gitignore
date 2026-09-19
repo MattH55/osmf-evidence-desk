@@ -13,3 +13,6 @@ __pycache__/
 .cache/
 data/dump/**
 !data/dump/.gitkeep
+
+# ED-8: generated entity search index (from dump)
+public/search-index.json
