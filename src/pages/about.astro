@@ -1,52 +1,157 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import TierLegend from '../components/TierLegend.astro';
-import { getMeta } from '../lib/dump';
+import { getMeta, getSeedConditions } from '../lib/dump';
+import { entityHref } from '../lib/ids';
 
 const meta = getMeta();
+const seeds = getSeedConditions();
+const citeEntity = seeds[0] ?? {
+  id: 'osmf:condition:long-covid',
+  label: 'Long COVID',
+  type: 'condition',
+};
+const citePath = entityHref(citeEntity.id);
+const citeUrl = `https://desk.opensourcemed.info${citePath}`;
+const generatedDate = meta.generated_at.slice(0, 10);
 ---
 
 <BaseLayout
   title="About — Evidence Desk"
-  description="About Evidence Desk: scope, evidence tiers, example data, and not medical advice."
+  description="About Evidence Desk: not medical advice, evidence tiers, how to cite, and license."
 >
   <h1 class="page-title">About</h1>
   <p class="lede">
-    Evidence Desk is a search-and-browse UI for the OSMF Shared Evidence Graph —
-    conditions, biomarkers, agents, trials, papers, and claims with provenance
+    Evidence Desk is a search-and-browse UI for the
+    <a href="https://github.com/MattH55/osmf-evidence-graph"
+      >OSMF Shared Evidence Graph</a
+    >
+    — conditions, biomarkers, agents, trials, papers, and claims with provenance
     and evidence tiers.
   </p>
-  <p>
-    <strong>Not medical advice.</strong> Content here is for research exploration
-    and transparency. It is not a substitute for professional medical judgment,
-    diagnosis, or treatment.
-  </p>
-  <p>
-    {
-      meta.is_example ? (
-        <>
-          This build uses <strong>illustrative / example</strong> dump data
-          (<code>meta.is_example: true</code>). A persistent banner appears on
-          every page until curated claims ship and the dump flag is cleared.
-        </>
-      ) : (
-        <>
-          This build uses curated dump data (<code>meta.is_example: false</code>
-          ).
-        </>
-      )
-    }
-    {' '}
-    Publisher: {meta.publisher}. License: {meta.license}. Product decisions
-    (host, dump source, soft-launch policy) are recorded in
-    <a href="https://github.com/MattH55/osmf-evidence-desk/blob/main/DECISIONS.md"
-      >DECISIONS.md</a
+
+  <section aria-labelledby="not-advice-heading">
+    <h2 id="not-advice-heading" class="section-title">Not medical advice</h2>
+    <p>
+      <strong>Content on Evidence Desk is not medical advice.</strong> It is not
+      a diagnosis, prescription, dosing guide, or treatment recommendation. Desk
+      exists for research exploration, transparency, and reproducibility of
+      structured claims. Always consult a qualified clinician for personal health
+      decisions.
+    </p>
+    <p>
+      {
+        meta.is_example ? (
+          <>
+            This build uses <strong>illustrative / example</strong> dump data
+            (<code>meta.is_example: true</code>). A persistent banner appears on
+            every page until curated claims ship and the dump flag is cleared.
+          </>
+        ) : (
+          <>
+            This build uses curated dump data (
+            <code>meta.is_example: false</code>).
+          </>
+        )
+      }
+    </p>
+  </section>
+
+  <TierLegend />
+  <p class="section-note">
+    Tier wording matches
+    <a
+      href="https://raw.githubusercontent.com/MattH55/osmf-evidence-graph/main/SCHEMA.md"
+      >evidence-graph <code>SCHEMA.md</code></a
+    >
+    (Evidence tiers A–D). Source repo:
+    <a href="https://github.com/MattH55/osmf-evidence-graph"
+      >github.com/MattH55/osmf-evidence-graph</a
     >.
   </p>
 
-  <TierLegend />
+  <section aria-labelledby="cite-heading">
+    <h2 id="cite-heading" class="section-title">How to cite</h2>
+    <p>
+      Cite the graph entity id, the Desk URL path for that entity, and the dump
+      <code>generated_at</code> timestamp so readers can align with a specific
+      build.
+    </p>
+    <p class="cite-example-label">Example (entity + dump date):</p>
+    <blockquote class="cite-example">
+      <p>
+        Open Source Medicine Foundation. {citeEntity.label} (
+        <code>{citeEntity.id}</code>). <em>Evidence Desk</em>.
+        <a href={citePath}>{citeUrl}</a>. Dump generated{' '}
+        <time datetime={meta.generated_at}>{meta.generated_at}</time>
+        {' '}(schema {meta.schema_version}; accessed {generatedDate}). License:{' '}
+        {meta.license}.
+      </p>
+    </blockquote>
+    <p class="section-note">
+      Prefer the entity id over display labels when linking programmatically.
+      Claim pages use the same pattern under <code>/claim/…</code>.
+    </p>
+  </section>
+
+  <section aria-labelledby="license-heading">
+    <h2 id="license-heading" class="section-title">License</h2>
+    <p>
+      Dump content in this build is licensed as declared in meta:
+      <strong>{meta.license}</strong>
+      {
+        meta.license === 'CC-BY-4.0' ? (
+          <>
+            {' '}
+            (
+            <a href="https://creativecommons.org/licenses/by/4.0/"
+              >Creative Commons Attribution 4.0</a
+            >
+            ).
+          </>
+        ) : (
+          '.'
+        )
+      }
+      {' '}
+      Publisher: {meta.publisher}. Product decisions (host, dump source,
+      soft-launch policy) are recorded in
+      <a
+        href="https://github.com/MattH55/osmf-evidence-desk/blob/main/DECISIONS.md"
+        >DECISIONS.md</a
+      >.
+    </p>
+  </section>
+
+  <section aria-labelledby="links-heading">
+    <h2 id="links-heading" class="section-title">Links</h2>
+    <ul>
+      <li>
+        <a href="https://github.com/MattH55/osmf-evidence-graph"
+          >Shared Evidence Graph repository</a
+        >
+      </li>
+      <li>
+        <a
+          href="https://raw.githubusercontent.com/MattH55/osmf-evidence-graph/main/SCHEMA.md"
+          >SCHEMA.md (raw)</a
+        >
+      </li>
+      <li>
+        <a href="/download">Dump meta &amp; fetch instructions</a>
+      </li>
+      <li>
+        <a href="/search">Entity search (minimal filter)</a>
+      </li>
+      <li>
+        <a href="https://github.com/MattH55/osmf-evidence-desk"
+          >Evidence Desk repository</a
+        >
+      </li>
+    </ul>
+  </section>
 
   <p>
-    <a href="/">← Back to home</a>
+    <a href="/">← Home</a>
   </p>
 </BaseLayout>

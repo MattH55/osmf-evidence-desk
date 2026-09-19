@@ -1,0 +1,86 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getMeta } from '../lib/dump';
+
+const meta = getMeta();
+---
+
+<BaseLayout
+  title="Download — Evidence Desk"
+  description="Evidence dump metadata and how Desk obtains the Shared Evidence Graph dump."
+>
+  <h1 class="page-title">Evidence dump</h1>
+  <p class="lede">
+    Desk builds from a Shared Evidence Graph dump at build time. A public
+    download artifact (EG-8 / Desk ED-15) is not wired yet; until then use the
+    graph repo’s <code>build:dump</code> flow or Desk’s <code>fetch-dump</code>
+    script.
+  </p>
+
+  <section class="download-meta" aria-labelledby="dump-meta-heading">
+    <h2 id="dump-meta-heading" class="section-title">This build’s dump meta</h2>
+    <dl class="meta-grid">
+      <div class="meta-grid__row">
+        <dt>schema_version</dt>
+        <dd><code>{meta.schema_version}</code></dd>
+      </div>
+      <div class="meta-grid__row">
+        <dt>generated_at</dt>
+        <dd><time datetime={meta.generated_at}>{meta.generated_at}</time></dd>
+      </div>
+      <div class="meta-grid__row">
+        <dt>is_example</dt>
+        <dd><code>{String(meta.is_example)}</code></dd>
+      </div>
+      <div class="meta-grid__row">
+        <dt>license</dt>
+        <dd>{meta.license}</dd>
+      </div>
+      <div class="meta-grid__row">
+        <dt>publisher</dt>
+        <dd>{meta.publisher}</dd>
+      </div>
+      {
+        meta.notes ? (
+          <div class="meta-grid__row">
+            <dt>notes</dt>
+            <dd>{meta.notes}</dd>
+          </div>
+        ) : null
+      }
+    </dl>
+  </section>
+
+  <section aria-labelledby="how-heading">
+    <h2 id="how-heading" class="section-title">How to obtain the dump</h2>
+    <ol class="download-steps">
+      <li>
+        Clone or update
+        <a href="https://github.com/MattH55/osmf-evidence-graph"
+          >MattH55/osmf-evidence-graph</a
+        >
+        and run <code>npm run build:dump</code> there, <strong>or</strong>
+      </li>
+      <li>
+        From this Desk repo run <code>npm run fetch-dump</code> (clones the graph
+        cache, builds the dump, copies to <code>data/dump/latest.json</code>).
+      </li>
+    </ol>
+    <p class="section-note">
+      ED-15 will expand download UX (direct artifact URL, checksums, mirror).
+      Schema contract:
+      <a
+        href="https://raw.githubusercontent.com/MattH55/osmf-evidence-graph/main/SCHEMA.md"
+        >SCHEMA.md (raw)</a
+      >.
+    </p>
+  </section>
+
+  <p>
+    <a href="/">← Home</a>
+    ·
+    <a href="/search">Search</a>
+    ·
+    <a href="/about">About</a>
+  </p>
+</BaseLayout>

@@ -2,7 +2,7 @@
 
 Search-and-browse app for the [OSMF Shared Evidence Graph](https://github.com/MattH55/osmf-evidence-graph) — conditions, biomarkers, agents, trials, papers, and claims with provenance and evidence tiers.
 
-**Status:** ED-5 claim pages (Astro + TypeScript, static output).
+**Status:** ED-6 home + ED-7 about (Astro + TypeScript, static output).
 
 **Production host (planned):** [desk.opensourcemed.info](https://desk.opensourcemed.info) — DNS/deploy in ED-17.
 
@@ -67,6 +67,18 @@ Every dump claim gets a static page at build time via `getStaticPaths`.
 **404:** Only claims present in the dump are generated.
 
 **URL scheme:** `osmf:claim:ex-pem-of-long-covid` → `/claim/osmf/claim/ex-pem-of-long-covid`.
+
+## Home, search, about (ED-6 / ED-7)
+
+| Piece | Role |
+|-------|------|
+| `/` | One-screen explainer, not-advice notice, featured `meta.seed_conditions`, CTA to Search / About / Download |
+| `/search` | Minimal client-side filter over dump entity labels + aliases (`getEntitySearchIndex`); ED-8 can upgrade later |
+| `/about` | Not-advice policy, `TierLegend` (aligned with graph `SCHEMA.md`), citation example (entity id + Desk URL + `generated_at`), CC-BY-4.0 license, links to graph repo + SCHEMA.md raw |
+| `/download` | Dump meta (`schema_version`, `generated_at`, `is_example`, license) + `fetch-dump` instructions (ED-15 expands) |
+| Nav | Home · Search · About · Download |
+
+Example-data banner remains driven by `meta.is_example` (unchanged).
 
 ## Develop
 
