@@ -1,0 +1,250 @@
+---
+/**
+ * Claim desk view (ED-5).
+ * One static page per dump claim. Unknown ids 404 (no path generated).
+ * URL: /claim/osmf/claim/ex-pem-of-long-covid ↔ osmf:claim:ex-pem-of-long-covid
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import TierBadge from '../../components/TierBadge.astro';
+import ClaimStatusChip from '../../components/ClaimStatusChip.astro';
+import TierLegend from '../../components/TierLegend.astro';
+import {
+  getAllClaims,
+  getEntity,
+  getEntityLabel,
+  type DumpClaim,
+  type EvidenceTier,
+  type ClaimStatus,
+} from '../../lib/dump';
+import { claimHref, claimIdToPath, entityHref } from '../../lib/ids';
+import { sourceHref, sourceText } from '../../lib/sources';
+
+export function getStaticPaths() {
+  return getAllClaims().map((claim) => ({
+    params: { id: claimIdToPath(claim.id) },
+    props: { claim },
+  }));
+}
+
+interface Props {
+  claim: DumpClaim;
+}
+
+const { claim } = Astro.props;
+
+function isTier(t: string): t is EvidenceTier {
+  return t === 'A' || t === 'B' || t === 'C' || t === 'D';
+}
+
+function isStatus(s: string): s is ClaimStatus {
+  return s === 'draft' || s === 'published' || s === 'superseded';
+}
+
+const tierRaw = String(claim.evidence_tier ?? 'D');
+const statusRaw = String(claim.status ?? 'draft');
+const tier: EvidenceTier = isTier(tierRaw) ? tierRaw : 'D';
+const status: ClaimStatus = isStatus(statusRaw) ? statusRaw : 'draft';
+const isLowTier = tier === 'C' || tier === 'D';
+
+const subjectEntity = getEntity(claim.subject_id);
+const subjectLabel = getEntityLabel(claim.subject_id);
+const subjectHref = subjectEntity ? entityHref(subjectEntity.id) : undefined;
+
+const objectId = claim.object_id;
+const objectLiteral =
+  typeof claim.object_literal === 'string' ? claim.object_literal : undefined;
+const objectEntity = objectId ? getEntity(objectId) : undefined;
+const objectLabel = objectLiteral
+  ? objectLiteral
+  : objectId
+    ? getEntityLabel(objectId)
+    : undefined;
+const objectHref = objectEntity ? entityHref(objectEntity.id) : undefined;
+
+const sources = Array.isArray(claim.sources) ? claim.sources : [];
+const limitationsText =
+  typeof claim.limitations === 'string' ? claim.limitations.trim() : '';
+const showLimitations = isLowTier || limitationsText.length > 0;
+
+const supersedesId =
+  typeof claim.supersedes_id === 'string' ? claim.supersedes_id : undefined;
+
+function formatWhen(iso?: string): string | undefined {
+  if (!iso) return undefined;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toISOString().slice(0, 10);
+}
+
+const reviewedLabel = formatWhen(claim.reviewed_at);
+const pageTitle = `${claim.predicate} — Claim — Evidence Desk`;
+const description = `Claim ${claim.id}: ${subjectLabel} ${claim.predicate}${
+  objectLabel ? ` ${objectLabel}` : ''
+}`.slice(0, 160);
+---
+
+<BaseLayout title={pageTitle} description={description}>
+  <nav class="entity-breadcrumb" aria-label="Breadcrumb">
+    <a href="/">Home</a>
+    <span aria-hidden="true"> / </span>
+    <span>Claim</span>
+  </nav>
+
+  <header class="claim-header">
+    <div class="claim-header__meta">
+      <TierBadge tier={tier} />
+      <ClaimStatusChip status={status} />
+    </div>
+    <h1 class="page-title claim-title">
+      <code class="claim-title__predicate">{claim.predicate}</code>
+    </h1>
+    <p class="claim-id">
+      <code>{claim.id}</code>
+    </p>
+  </header>
+
+  <section class="entity-section" aria-labelledby="claim-spo-heading">
+    <h2 id="claim-spo-heading" class="section-title">Statement</h2>
+    <p class="claim-spo">
+      {
+        subjectHref ? (
+          <a class="claim-spo__entity" href={subjectHref}>
+            {subjectLabel}
+          </a>
+        ) : (
+          <span class="claim-spo__entity">{subjectLabel}</span>
+        )
+      }
+      <span class="claim-spo__predicate">
+        <code>{claim.predicate}</code>
+      </span>
+      {
+        objectLabel &&
+          (objectHref ? (
+            <a class="claim-spo__entity" href={objectHref}>
+              {objectLabel}
+            </a>
+          ) : (
+            <span class="claim-spo__entity claim-spo__literal">{objectLabel}</span>
+          ))
+      }
+    </p>
+  </section>
+
+  <section class="entity-section" aria-labelledby="claim-sources-heading">
+    <h2 id="claim-sources-heading" class="section-title">Sources</h2>
+    {
+      sources.length === 0 ? (
+        <p class="entity-empty">No sources listed.</p>
+      ) : (
+        <ul class="claim-source-list">
+          {sources.map((s) => {
+            const href = sourceHref(s);
+            const text = sourceText(s);
+            return (
+              <li>
+                {s.type && <span class="claim-source-list__type">{s.type}</span>}
+                {href ? (
+                  <a href={href} rel="noopener noreferrer">
+                    {text}
+                  </a>
+                ) : (
+                  <span>{text}</span>
+                )}
+                {s.value && text !== s.value && (
+                  <code class="claim-source-list__value">{s.value}</code>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )
+    }
+  </section>
+
+  {
+    showLimitations && (
+      <section
+        class="entity-section"
+        aria-labelledby="claim-limitations-heading"
+      >
+        <h2 id="claim-limitations-heading" class="section-title">
+          Limitations
+        </h2>
+        <div
+          class:list={[
+            'claim-page-limitations',
+            isLowTier && 'claim-page-limitations--required',
+          ]}
+          role="note"
+        >
+          {limitationsText ? (
+            <p>{limitationsText}</p>
+          ) : (
+            <p class="entity-empty">No limitations listed (tier {tier}).</p>
+          )}
+        </div>
+      </section>
+    )
+  }
+
+  <section class="entity-section" aria-labelledby="claim-provenance-heading">
+    <h2 id="claim-provenance-heading" class="section-title">Provenance</h2>
+    <ul class="entity-kv-list">
+      {
+        claim.reviewed_at && (
+          <li>
+            <span class="entity-kv__key">Reviewed at</span>
+            <time class="entity-kv__value" datetime={claim.reviewed_at}>
+              {reviewedLabel}
+            </time>
+          </li>
+        )
+      }
+      {
+        claim.reviewed_by && (
+          <li>
+            <span class="entity-kv__key">Reviewed by</span>
+            <span class="entity-kv__value">{claim.reviewed_by}</span>
+          </li>
+        )
+      }
+      <li>
+        <span class="entity-kv__key">License</span>
+        <span class="entity-kv__value">
+          {claim.license ?? 'Not specified'}
+        </span>
+      </li>
+      {
+        supersedesId && (
+          <li>
+            <span class="entity-kv__key">Supersedes</span>
+            <a class="entity-kv__value" href={claimHref(supersedesId)}>
+              <code>{supersedesId}</code>
+            </a>
+          </li>
+        )
+      }
+      {
+        claim.confidence_notes && (
+          <li>
+            <span class="entity-kv__key">Confidence</span>
+            <span class="entity-kv__value">{String(claim.confidence_notes)}</span>
+          </li>
+        )
+      }
+    </ul>
+  </section>
+
+  <TierLegend />
+
+  <p>
+    {
+      subjectHref ? (
+        <a href={subjectHref}>← Back to {subjectLabel}</a>
+      ) : (
+        <a href="/">← Back to home</a>
+      )
+    }
+  </p>
+</BaseLayout>
