@@ -7,6 +7,8 @@
   "scripts": {
     "dev": "astro dev",
     "fetch-dump": "node scripts/fetch-dump.mjs",
+    "check:dump": "node scripts/check-dump-refs.mjs",
+    "check:dist": "node scripts/check-dump-refs.mjs --dist",
     "prebuild": "node scripts/fetch-dump.mjs",
     "build": "astro build",
     "preview": "astro preview",

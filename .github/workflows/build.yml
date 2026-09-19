@@ -25,5 +25,20 @@ jobs:
       - name: Fetch evidence-graph dump
         run: npm run fetch-dump
 
+      - name: Check dump refs (ED-16)
+        run: npm run check:dump
+
       - name: Build static site
-        run: npm run build
+        # Invoke astro directly so npm's prebuild (fetch-dump) does not run twice.
+        run: npx astro build
+
+      - name: Smoke-check dist entity/claim pages (ED-16)
+        run: npm run check:dist
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidence-desk-dist
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14

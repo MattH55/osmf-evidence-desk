@@ -2,9 +2,9 @@
 
 Search-and-browse app for the [OSMF Shared Evidence Graph](https://github.com/MattH55/osmf-evidence-graph) — conditions, biomarkers, agents, trials, papers, and claims with provenance and evidence tiers.
 
-**Status:** ED-12–15 network links, embed stub, empty-state polish, dump download (Astro + TypeScript, static output).
+**Status:** ED-16 CI dump-ref checks + dist artifact; ED-17 in-repo Vercel/static deploy docs (Astro + TypeScript, static output).
 
-**Production host (planned):** [desk.opensourcemed.info](https://desk.opensourcemed.info) — DNS/deploy in ED-17.
+**Production host (planned):** [desk.opensourcemed.info](https://desk.opensourcemed.info) — see [DEPLOY.md](./DEPLOY.md) (ED-17). Not asserted live until DNS + Vercel are verified.
 
 ## Stack
 
@@ -117,13 +117,43 @@ On each entity page: client-side CSV / BibTeX download and one-click copy citati
 
 **Cite snippet:** graph id, Desk URL, `generated_at`, `schema_version` (documented on `/about`).
 
+
+## CI (ED-16)
+
+GitHub Actions (`.github/workflows/build.yml`) on every PR and push to `main`:
+
+1. `npm ci`
+2. `npm run fetch-dump`
+3. `npm run check:dump` — fail on duplicate entity/claim ids or claims whose `subject_id` / `object_id` (when set) reference a missing dump node (entity or claim; claim subjects allowed for edges like `supported_by`)
+4. `npx astro build`
+5. `npm run check:dist` — smoke: `dist/entity/...` and `dist/claim/...` pages exist for every dump id (same path encoding as `src/lib/ids.ts`)
+6. Upload `dist/` as the `evidence-desk-dist` Actions artifact
+
+```bash
+npm run check:dump   # dump integrity only
+npm run check:dist   # requires dist/ from a prior build
+```
+
+## Deploy (ED-17)
+
+Static hosting on Vercel. In-repo config:
+
+| File | Role |
+|------|------|
+| `vercel.json` | `installCommand` / `buildCommand` (includes `fetch-dump`) / `outputDirectory: dist` |
+| [DEPLOY.md](./DEPLOY.md) | Dump-on-Vercel notes, PR previews, DNS CNAME for `desk.opensourcemed.info`, ops checklist |
+
+Connecting the Vercel GitHub app and attaching the custom domain are **account/DNS steps** — they are not completed by merging this repo alone. Do not assume production is live until `https://desk.opensourcemed.info/` is verified.
+
 ## Develop
 
 ```bash
 npm install
 npm run fetch-dump   # once (or whenever you need a fresh dump)
+npm run check:dump   # referential integrity (ED-16)
 npm run dev          # local preview, typically http://localhost:4321
 npm run build        # fetch-dump + static site → dist/
+npm run check:dist   # optional: every entity/claim page present under dist/
 npm run preview      # serve the production build
 ```
 
