@@ -1,0 +1,76 @@
+---
+/**
+ * Temporary ED-3 chrome preview — sample ClaimCards for A/B/C/D.
+ * Remove or replace once ED-4/ED-5 entity/claim pages land.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ClaimCard from '../../components/ClaimCard.astro';
+import TierLegend from '../../components/TierLegend.astro';
+
+const samples = [
+  {
+    id: 'osmf:claim:ex-tier-a',
+    statement:
+      'Post-exertional malaise is a core feature of ME/CFS under consensus criteria.',
+    tier: 'A' as const,
+    status: 'published' as const,
+    sourcesPlaceholder: 'NICE / IOM consensus (fixture)',
+    limitations: undefined,
+  },
+  {
+    id: 'osmf:claim:ex-tier-b',
+    statement:
+      'Aerobic exercise protocols require careful pacing adaptation in Long COVID cohorts.',
+    tier: 'B' as const,
+    status: 'published' as const,
+    sourcesPlaceholder: 'Systematic review (fixture)',
+    limitations: 'Heterogeneous protocols across included trials.',
+  },
+  {
+    id: 'osmf:claim:ex-tier-c',
+    statement:
+      'Mitochondrial dysfunction may contribute to PEM via impaired oxidative phosphorylation.',
+    tier: 'C' as const,
+    status: 'draft' as const,
+    sourcesPlaceholder: 'Preclinical / case series (fixture)',
+    limitations:
+      'Mechanistic and early clinical signal only; not established as a treatment target.',
+  },
+  {
+    id: 'osmf:claim:ex-tier-d',
+    statement:
+      'A single vaccine lot is causally linked to a specific Long COVID phenotype.',
+    tier: 'D' as const,
+    status: 'superseded' as const,
+    sourcesPlaceholder: 'Contested reports (fixture)',
+    limitations:
+      'Insufficient and contested evidence; claim retained for provenance only.',
+  },
+];
+---
+
+<BaseLayout
+  title="Claim chrome preview — Evidence Desk"
+  description="Temporary ED-3 preview of tier badges, status chips, and inline C/D limitations."
+>
+  <h1 class="page-title">Claim chrome preview</h1>
+  <p class="lede">
+    Temporary <code>/dev/claim-preview</code> page for ED-3 review. Shows sample
+    ClaimCards for tiers A–D so reviewers can confirm C/D limitations render
+    inline (not behind a toggle). Replace with real entity/claim pages in ED-4 /
+    ED-5.
+  </p>
+
+  <TierLegend />
+
+  <section class="claim-preview" aria-labelledby="claim-preview-heading">
+    <h2 id="claim-preview-heading" class="section-title">Sample claim cards</h2>
+    <div class="claim-preview__grid">
+      {samples.map((s) => <ClaimCard {...s} />)}
+    </div>
+  </section>
+
+  <p>
+    <a href="/about">About (includes TierLegend)</a> · <a href="/">Home</a>
+  </p>
+</BaseLayout>

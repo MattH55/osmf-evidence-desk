@@ -1,0 +1,30 @@
+---
+/**
+ * Evidence tier badge (A–D). Not color-only: visible “Tier X” text plus
+ * title/aria-label with short SCHEMA.md meaning.
+ */
+export type EvidenceTier = 'A' | 'B' | 'C' | 'D';
+
+interface Props {
+  tier: EvidenceTier;
+}
+
+const TIER_MEANING: Record<EvidenceTier, string> = {
+  A: 'Strong clinical / consensus support',
+  B: 'Solid clinical evidence or high-quality synthesis',
+  C: 'Mechanistic, preclinical, case-level, or early signal',
+  D: 'Contested, insufficient, or highly uncertain',
+};
+
+const { tier } = Astro.props;
+const meaning = TIER_MEANING[tier];
+const label = `Tier ${tier}: ${meaning}`;
+---
+
+<span
+  class={`tier-badge tier-badge--${tier.toLowerCase()}`}
+  title={label}
+  aria-label={label}
+>
+  <span class="tier-badge__text" aria-hidden="true">Tier {tier}</span>
+</span>

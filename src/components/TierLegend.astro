@@ -1,0 +1,59 @@
+---
+/**
+ * Reusable A–D tier blurb aligned with evidence-graph SCHEMA.md.
+ * Use on /about and anywhere a legend is needed.
+ */
+---
+
+<section class="tier-legend" aria-labelledby="tier-legend-heading">
+  <h2 id="tier-legend-heading" class="tier-legend__title">Evidence tiers A–D</h2>
+  <p class="tier-legend__intro">
+    Claims carry an evidence tier from the Shared Evidence Graph
+    (<code>SCHEMA.md</code>). Higher letters are stronger; C and D always
+    surface limitations in the UI.
+  </p>
+  <dl class="tier-legend__list">
+    <div class="tier-legend__row">
+      <dt>
+        <span class="tier-badge tier-badge--a" aria-hidden="true"
+          ><span class="tier-badge__text">Tier A</span></span
+        >
+        <span class="visually-hidden">Tier A</span>
+      </dt>
+      <dd>Strong clinical / consensus support</dd>
+    </div>
+    <div class="tier-legend__row">
+      <dt>
+        <span class="tier-badge tier-badge--b" aria-hidden="true"
+          ><span class="tier-badge__text">Tier B</span></span
+        >
+        <span class="visually-hidden">Tier B</span>
+      </dt>
+      <dd>Solid clinical evidence or high-quality synthesis</dd>
+    </div>
+    <div class="tier-legend__row">
+      <dt>
+        <span class="tier-badge tier-badge--c" aria-hidden="true"
+          ><span class="tier-badge__text">Tier C</span></span
+        >
+        <span class="visually-hidden">Tier C</span>
+      </dt>
+      <dd>Mechanistic, preclinical, case-level, or early signal</dd>
+    </div>
+    <div class="tier-legend__row">
+      <dt>
+        <span class="tier-badge tier-badge--d" aria-hidden="true"
+          ><span class="tier-badge__text">Tier D</span></span
+        >
+        <span class="visually-hidden">Tier D</span>
+      </dt>
+      <dd>Contested, insufficient, or highly uncertain</dd>
+    </div>
+  </dl>
+  <p class="tier-legend__note">
+    <strong>Limitations:</strong> tiers <strong>C</strong> and <strong>D</strong>
+    require a non-empty <code>limitations</code> string in the graph; Desk shows
+    those inline (never behind a click). Limitations are strongly recommended for
+    tier <strong>B</strong>.
+  </p>
+</section>
