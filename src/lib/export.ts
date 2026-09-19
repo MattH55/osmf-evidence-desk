@@ -247,3 +247,31 @@ export function buildCiteSnippet(input: CiteSnippetInput): string {
 export function exportBasename(entityId: string): string {
   return entityId.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'entity';
 }
+
+export interface EmbedSnippetInput {
+  entityId: string;
+  deskUrl: string;
+}
+
+/**
+ * Preview / unstable iframe embed stub (ED-13).
+ * Includes entity id + Desk URL. Marked clearly as an unstable API.
+ */
+export function buildEmbedSnippet(input: EmbedSnippetInput): string {
+  const { entityId, deskUrl } = input;
+  return [
+    '<!-- OSMF Evidence Desk embed — PREVIEW / UNSTABLE API',
+    `     entity: ${entityId}`,
+    `     desk:   ${deskUrl}`,
+    '     Do not rely on iframe dimensions, params, or host path stability yet. -->',
+    `<iframe`,
+    `  src="${deskUrl}"`,
+    `  title="OSMF Evidence Desk — ${entityId}"`,
+    `  loading="lazy"`,
+    `  referrerpolicy="no-referrer-when-downgrade"`,
+    `  style="width:100%;min-height:420px;border:1px solid #d0d7e2;border-radius:8px;"`,
+    `  data-osmf-embed="preview"`,
+    `  data-osmf-entity="${entityId}"`,
+    `></iframe>`,
+  ].join('\n');
+}

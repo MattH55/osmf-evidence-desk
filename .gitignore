@@ -16,3 +16,7 @@ data/dump/**
 
 # ED-8: generated entity search index (from dump)
 public/search-index.json
+
+# ED-15: site-fetchable dump copy (from fetch-dump)
+public/dump/**
+!public/dump/.gitkeep

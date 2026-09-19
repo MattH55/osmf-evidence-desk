@@ -2,7 +2,7 @@
 
 Search-and-browse app for the [OSMF Shared Evidence Graph](https://github.com/MattH55/osmf-evidence-graph) — conditions, biomarkers, agents, trials, papers, and claims with provenance and evidence tiers.
 
-**Status:** ED-9/10/11 entity exports (Astro + TypeScript, static output).
+**Status:** ED-12–15 network links, embed stub, empty-state polish, dump download (Astro + TypeScript, static output).
 
 **Production host (planned):** [desk.opensourcemed.info](https://desk.opensourcemed.info) — DNS/deploy in ED-17.
 
@@ -20,6 +20,7 @@ Desk does **not** vendor the graph dump in git. A prebuild step fetches and buil
 |------|------|
 | `.cache/osmf-evidence-graph/` | Shallow clone of `MattH55/osmf-evidence-graph` @ `main` (gitignored) |
 | `data/dump/latest.json` | Copied from the graph’s `dist/dump/latest.json` after `npm run build:dump` (gitignored) |
+| `public/dump/latest.json` | Same file copied for site fetch at `/dump/latest.json` (ED-15; gitignored) |
 | `src/lib/dump.ts` | Build-time loader; fails the build if the file is missing or `meta.schema_version` ≠ `0.1.0` |
 
 ```bash
@@ -75,7 +76,7 @@ Every dump claim gets a static page at build time via `getStaticPaths`.
 | `/` | One-screen explainer, not-advice notice, featured `meta.seed_conditions`, CTA to Search / About / Download |
 | `/search` | Entity search (upgraded in ED-8 — see below) |
 | `/about` | Not-advice policy, `TierLegend` (aligned with graph `SCHEMA.md`), citation example (entity id + Desk URL + `generated_at`), CC-BY-4.0 license, links to graph repo + SCHEMA.md raw |
-| `/download` | Dump meta (`schema_version`, `generated_at`, `is_example`, license) + `fetch-dump` instructions (ED-15 expands) |
+| `/download` | Dump meta (`schema_version`, `generated_at`, `is_example`, publisher, license) + vendored-build note + `/dump/latest.json` + graph/SCHEMA links (ED-15) |
 | Nav | Home · Search · About · Download (+ header search form) |
 
 Example-data banner remains driven by `meta.is_example` (unchanged).
@@ -148,3 +149,13 @@ See [DECISIONS.md](./DECISIONS.md).
 ## Not medical advice
 
 Evidence Desk surfaces curated research claims and sources. It does not provide clinical recommendations or dosing guidance.
+
+## Network, embed, empty states, download (ED-12–15)
+
+| Piece | Role |
+|-------|------|
+| `EntityNetworkLinks` | Labeled outbound `urls[]` (tracker, spikeprotein, navigator, summit, canonical, other); hidden when empty; `target=_blank` + `rel="noopener noreferrer"` |
+| `Copy embed` on entity | Preview / unstable iframe snippet with entity id + Desk URL (next to CSV / BibTeX / cite) |
+| Entity empty states | Callouts for no claims, draft-only, C/D-only, superseded-only; draft cards dashed; mobile tap targets on entity + search |
+| `/download` | Meta fields + vendored-build note + download `/dump/latest.json` + graph repo + SCHEMA.md |
+
