@@ -6,18 +6,21 @@
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ClaimCard from '../../components/ClaimCard.astro';
+import EntityExportActions from '../../components/EntityExportActions.astro';
 import TierLegend from '../../components/TierLegend.astro';
 import {
   getAllEntities,
   getClaimsForEntity,
   getEntity,
   getEntityLabel,
+  getMeta,
   getRelatedEntities,
   type DumpClaim,
   type DumpEntity,
   type EvidenceTier,
   type ClaimStatus,
 } from '../../lib/dump';
+import { buildBibtex, buildCiteSnippet, buildCsv } from '../../lib/export';
 import { claimHref, entityHref, entityIdToPath } from '../../lib/ids';
 
 export function getStaticPaths() {
@@ -36,6 +39,16 @@ const { entity } = Astro.props;
 // ID ↔ path via entityIdToPath / pathPartsToEntityId in src/lib/ids.ts.
 const claims = getClaimsForEntity(entity.id);
 const related = getRelatedEntities(entity.id);
+const meta = getMeta();
+const exportClaims = claims.all;
+const csvText = buildCsv(exportClaims);
+const bibtex = buildBibtex(exportClaims);
+const deskUrl = `https://desk.opensourcemed.info${entityHref(entity.id)}`;
+const citeSnippet = buildCiteSnippet({
+  entityId: entity.id,
+  deskUrl,
+  meta,
+});
 
 const aliases = Array.isArray(entity.aliases) ? entity.aliases : [];
 const externalIds = Array.isArray(entity.external_ids) ? entity.external_ids : [];
@@ -272,6 +285,15 @@ const description =
       )
     }
   </section>
+
+  <EntityExportActions
+    entityId={entity.id}
+    csvText={csvText}
+    bibtexText={bibtex.text}
+    citeSnippet={citeSnippet}
+    claimCount={exportClaims.length}
+    bibtexEntryCount={bibtex.entryCount}
+  />
 
   <TierLegend />
 

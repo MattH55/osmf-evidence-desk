@@ -2,7 +2,7 @@
 
 Search-and-browse app for the [OSMF Shared Evidence Graph](https://github.com/MattH55/osmf-evidence-graph) — conditions, biomarkers, agents, trials, papers, and claims with provenance and evidence tiers.
 
-**Status:** ED-8 entity search (Astro + TypeScript, static output).
+**Status:** ED-9/10/11 entity exports (Astro + TypeScript, static output).
 
 **Production host (planned):** [desk.opensourcemed.info](https://desk.opensourcemed.info) — DNS/deploy in ED-17.
 
@@ -99,6 +99,22 @@ Compile-time entity index + client MiniSearch. **No claim full-text** in MVP.
 npm run fetch-dump          # dump + search-index.json
 npm run build-search-index  # index only (dump must already exist)
 ```
+
+## Entity exports (ED-9 / ED-10 / ED-11)
+
+On each entity page: client-side CSV / BibTeX download and one-click copy citation (no auth).
+
+| Piece | Role |
+|-------|------|
+| `src/lib/export.ts` | `buildCsv`, `buildBibtex`, `buildCiteSnippet` |
+| `src/components/EntityExportActions.astro` | Download CSV, Download BibTeX, Copy citation (Blob + clipboard) |
+| `/about#exports` | CSV column list, BibTeX limitations (`url` / `osmf_page` omitted), cite-snippet format |
+
+**CSV columns (stable):** `id`, `subject`, `predicate`, `object`, `tier`, `sources`, `reviewed_at`, `status` — only claims involving that entity (in or out).
+
+**BibTeX:** DOI/PMID → `@article`; NCT → `@misc`; `url` / `osmf_page` omitted (not full bibliographic records).
+
+**Cite snippet:** graph id, Desk URL, `generated_at`, `schema_version` (documented on `/about`).
 
 ## Develop
 
