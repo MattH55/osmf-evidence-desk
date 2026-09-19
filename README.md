@@ -2,7 +2,19 @@
 
 Search-and-browse app for the [OSMF Shared Evidence Graph](https://github.com/MattH55/osmf-evidence-graph) — conditions, biomarkers, agents, trials, papers, and claims with provenance and evidence tiers.
 
-**Status:** MVP tickets filed; app scaffold not started yet.
+**Status:** MVP tickets filed; ED-0 decisions locked; app scaffold not started yet.
+
+## ED-0 decisions (locked)
+
+See [DECISIONS.md](./DECISIONS.md).
+
+| Topic | Decision |
+|-------|----------|
+| Repo | `MattH55/osmf-evidence-desk` |
+| Host | `desk.opensourcemed.info` |
+| Dump (MVP) | CI clones `osmf-evidence-graph` + `npm run build:dump` |
+| Soft launch | Example data with persistent banner |
+
 
 ## Related
 
