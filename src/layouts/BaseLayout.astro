@@ -1,0 +1,65 @@
+---
+import '../styles/global.css';
+import ExampleDataBanner from '../components/ExampleDataBanner.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** When true, show the example-data banner (ED-2 will drive from dump meta). */
+  showExampleBanner?: boolean;
+}
+
+const {
+  title = 'Evidence Desk',
+  description = 'Search and browse the OSMF Shared Evidence Graph.',
+  showExampleBanner = false,
+} = Astro.props;
+
+const pathname = Astro.url.pathname;
+const isHome = pathname === '/' || pathname === '/index.html';
+const isAbout = pathname.startsWith('/about');
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <div class="layout-root">
+      <ExampleDataBanner show={showExampleBanner} />
+      <header class="site-header">
+        <div class="site-header__inner">
+          <a class="site-brand" href="/">Evidence Desk</a>
+          <nav aria-label="Primary">
+            <ul class="site-nav">
+              <li>
+                <a href="/" aria-current={isHome ? 'page' : undefined}>Home</a>
+              </li>
+              <li>
+                <a href="/about" aria-current={isAbout ? 'page' : undefined}>About</a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </header>
+      <main class="site-main" id="main">
+        <slot />
+      </main>
+      <footer class="site-footer">
+        <div class="site-footer__inner">
+          <p class="not-medical-advice">Not medical advice.</p>
+          <p>
+            Evidence Desk surfaces curated research claims and sources. It does
+            not provide clinical recommendations or dosing guidance. Always
+            consult a qualified clinician for personal health decisions.
+          </p>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

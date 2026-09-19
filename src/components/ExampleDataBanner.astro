@@ -1,0 +1,27 @@
+---
+/**
+ * Persistent-style banner for illustrative / example dump data.
+ * ED-2 will drive `show` from dump `meta.is_example`.
+ * For ED-1 scaffold visibility, the homepage may pass `show={true}`.
+ */
+interface Props {
+  show?: boolean;
+}
+
+const { show = false } = Astro.props;
+---
+
+{
+  show && (
+    <aside class="example-banner" role="status" aria-live="polite">
+      <div class="example-banner__inner">
+        <span class="example-banner__label">Example data</span>
+        <p class="example-banner__text">
+          This view uses illustrative / example evidence data for UX validation.
+          It is not curated clinical guidance. Soft-launch will keep this banner
+          while <code>meta.is_example</code> is true (wired in ED-2).
+        </p>
+      </div>
+    </aside>
+  )
+}
