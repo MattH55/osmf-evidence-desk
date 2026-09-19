@@ -1,5 +1,5 @@
 /**
- * Build-time evidence-graph dump loader (ED-2).
+ * Build-time evidence-graph dump loader (ED-2 / ED-4).
  *
  * Reads `data/dump/latest.json` produced by `npm run fetch-dump`.
  * Missing file or unsupported `meta.schema_version` fails the Astro build.
@@ -21,6 +21,16 @@ export interface DumpMeta {
   seed_conditions?: string[];
 }
 
+export interface DumpExternalId {
+  system: string;
+  value: string;
+}
+
+export interface DumpEntityUrl {
+  rel: string;
+  href: string;
+}
+
 export interface DumpEntity {
   id: string;
   type: string;
@@ -29,11 +39,34 @@ export interface DumpEntity {
   summary?: string;
   status?: string;
   updated_at?: string;
+  external_ids?: DumpExternalId[];
+  urls?: DumpEntityUrl[];
+  [key: string]: unknown;
+}
+
+export type ClaimStatus = 'draft' | 'published' | 'superseded';
+export type EvidenceTier = 'A' | 'B' | 'C' | 'D';
+
+export interface DumpClaimSource {
+  type?: string;
+  value?: string;
+  label?: string;
   [key: string]: unknown;
 }
 
 export interface DumpClaim {
   id: string;
+  subject_id: string;
+  predicate: string;
+  object_id: string;
+  evidence_tier: EvidenceTier | string;
+  sources?: DumpClaimSource[];
+  limitations?: string;
+  status: ClaimStatus | string;
+  reviewed_by?: string;
+  reviewed_at?: string;
+  license?: string;
+  confidence_notes?: string;
   [key: string]: unknown;
 }
 
@@ -43,10 +76,22 @@ export interface EvidenceDump {
   claims: DumpClaim[];
 }
 
+export interface EntityClaims {
+  out: DumpClaim[];
+  in: DumpClaim[];
+  /** Published + draft (non-superseded), claims out then in. */
+  main: DumpClaim[];
+  /** Superseded claims for collapsed history. */
+  superseded: DumpClaim[];
+  /** All claims touching this entity. */
+  all: DumpClaim[];
+}
+
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const DUMP_PATH = path.join(ROOT, 'data', 'dump', 'latest.json');
 
 let cached: EvidenceDump | null = null;
+let entityIndex: Map<string, DumpEntity> | null = null;
 
 function fail(message: string): never {
   throw new Error(`[dump] ${message}`);
@@ -95,6 +140,13 @@ function loadDump(): EvidenceDump {
   return dump as EvidenceDump;
 }
 
+function getEntityIndex(): Map<string, DumpEntity> {
+  if (!entityIndex) {
+    entityIndex = new Map(getDump().entities.map((e) => [e.id, e]));
+  }
+  return entityIndex;
+}
+
 /** Full validated dump (cached per process). */
 export function getDump(): EvidenceDump {
   if (!cached) {
@@ -105,6 +157,18 @@ export function getDump(): EvidenceDump {
 
 export function getMeta(): DumpMeta {
   return getDump().meta;
+}
+
+export function getAllEntities(): DumpEntity[] {
+  return getDump().entities;
+}
+
+export function getAllClaims(): DumpClaim[] {
+  return getDump().claims;
+}
+
+export function getEntity(id: string): DumpEntity | undefined {
+  return getEntityIndex().get(id);
 }
 
 export function getEntitiesByType(type: string): DumpEntity[] {
@@ -118,12 +182,58 @@ export function getEntitiesByType(type: string): DumpEntity[] {
 export function getSeedConditions(): DumpEntity[] {
   const dump = getDump();
   const ids = dump.meta.seed_conditions ?? [];
-  const byId = new Map(dump.entities.map((e) => [e.id, e]));
+  const byId = getEntityIndex();
   return ids.map((id) => {
     const found = byId.get(id);
     if (found) return found;
     return { id, type: 'condition', label: id };
   });
+}
+
+/** Claims where this entity is subject (out) or object (in). */
+export function getClaimsForEntity(id: string): EntityClaims {
+  const out: DumpClaim[] = [];
+  const inClaims: DumpClaim[] = [];
+  for (const claim of getDump().claims) {
+    if (claim.subject_id === id) out.push(claim);
+    if (claim.object_id === id) inClaims.push(claim);
+  }
+  const all = [...out, ...inClaims];
+  const isSuperseded = (c: DumpClaim) => c.status === 'superseded';
+  const main = all.filter((c) => !isSuperseded(c));
+  const superseded = all.filter(isSuperseded);
+  return { out, in: inClaims, main, superseded, all };
+}
+
+/**
+ * Unique dump entities on the other side of claims involving `id`
+ * (one-hop related). Skips ids that are not entities in the dump.
+ */
+export function getRelatedEntities(id: string): DumpEntity[] {
+  const { all } = getClaimsForEntity(id);
+  const seen = new Set<string>();
+  const related: DumpEntity[] = [];
+  const index = getEntityIndex();
+  for (const claim of all) {
+    const other =
+      claim.subject_id === id
+        ? claim.object_id
+        : claim.object_id === id
+          ? claim.subject_id
+          : null;
+    if (!other || other === id || seen.has(other)) continue;
+    const entity = index.get(other);
+    if (!entity) continue;
+    seen.add(other);
+    related.push(entity);
+  }
+  related.sort((a, b) => a.label.localeCompare(b.label));
+  return related;
+}
+
+/** Human label for an id if it is a dump entity; otherwise the raw id. */
+export function getEntityLabel(id: string): string {
+  return getEntity(id)?.label ?? id;
 }
 
 /** Absolute path to the dump file (for docs / debugging). */
