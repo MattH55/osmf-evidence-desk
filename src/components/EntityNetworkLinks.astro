@@ -1,0 +1,48 @@
+---
+/**
+ * Entity network outbound links (ED-12).
+ * Renders labeled rel types; section omitted when urls empty.
+ */
+import { networkRelLabel, usableNetworkUrls, type NetworkUrl } from '../lib/urls';
+
+interface Props {
+  urls?: NetworkUrl[] | null;
+}
+
+const { urls } = Astro.props;
+const items = usableNetworkUrls(urls ?? undefined);
+---
+
+{
+  items.length > 0 && (
+    <section class="entity-section entity-network" aria-labelledby="entity-urls-heading">
+      <h2 id="entity-urls-heading" class="section-title">
+        Network links
+      </h2>
+      <p class="section-note">
+        Outbound links into the OSMF network and related surfaces (opens in a new tab).
+      </p>
+      <ul class="entity-network__list">
+        {items.map((u) => {
+          const label = networkRelLabel(u.rel);
+          const relKey = (u.rel ?? '').trim().toLowerCase() || 'other';
+          return (
+            <li class="entity-network__item">
+              <a
+                class="entity-network__action btn btn--secondary"
+                href={u.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-rel={relKey}
+              >
+                <span class="entity-network__rel">{label}</span>
+                <span class="entity-network__hint" aria-hidden="true">↗</span>
+              </a>
+              <span class="entity-network__href">{u.href}</span>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  )
+}

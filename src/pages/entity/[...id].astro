@@ -1,12 +1,13 @@
 ---
 /**
- * Entity desk view (ED-4).
+ * Entity desk view (ED-4 / ED-12 / ED-13 / ED-14).
  * One static page per dump entity. Unknown ids 404 (no path generated).
  * URL: /entity/osmf/condition/pacvs ↔ osmf:condition:pacvs
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ClaimCard from '../../components/ClaimCard.astro';
 import EntityExportActions from '../../components/EntityExportActions.astro';
+import EntityNetworkLinks from '../../components/EntityNetworkLinks.astro';
 import TierLegend from '../../components/TierLegend.astro';
 import {
   getAllEntities,
@@ -20,7 +21,12 @@ import {
   type EvidenceTier,
   type ClaimStatus,
 } from '../../lib/dump';
-import { buildBibtex, buildCiteSnippet, buildCsv } from '../../lib/export';
+import {
+  buildBibtex,
+  buildCiteSnippet,
+  buildCsv,
+  buildEmbedSnippet,
+} from '../../lib/export';
 import { claimHref, entityHref, entityIdToPath } from '../../lib/ids';
 
 export function getStaticPaths() {
@@ -49,10 +55,30 @@ const citeSnippet = buildCiteSnippet({
   deskUrl,
   meta,
 });
+const embedSnippet = buildEmbedSnippet({
+  entityId: entity.id,
+  deskUrl,
+});
 
 const aliases = Array.isArray(entity.aliases) ? entity.aliases : [];
 const externalIds = Array.isArray(entity.external_ids) ? entity.external_ids : [];
 const urls = Array.isArray(entity.urls) ? entity.urls : [];
+
+const claimsOutMain = claims.out.filter((c) => c.status !== 'superseded');
+const claimsInMain = claims.in.filter((c) => c.status !== 'superseded');
+const mainClaims = claims.main;
+const publishedMain = mainClaims.filter((c) => c.status === 'published');
+const draftMain = mainClaims.filter((c) => c.status === 'draft');
+const noClaims = claims.all.length === 0;
+const supersededOnly = !noClaims && mainClaims.length === 0 && claims.superseded.length > 0;
+const onlyDrafts =
+  mainClaims.length > 0 && publishedMain.length === 0 && draftMain.length === mainClaims.length;
+const onlyLowTier =
+  mainClaims.length > 0 &&
+  mainClaims.every((c) => {
+    const t = String(c.evidence_tier ?? 'D');
+    return t === 'C' || t === 'D';
+  });
 
 function isTier(t: string): t is EvidenceTier {
   return t === 'A' || t === 'B' || t === 'C' || t === 'D';
@@ -179,75 +205,139 @@ const description =
     )
   }
 
+  <EntityNetworkLinks urls={urls} />
+
   {
-    urls.length > 0 && (
-      <section class="entity-section" aria-labelledby="entity-urls-heading">
-        <h2 id="entity-urls-heading" class="section-title">Network links</h2>
-        <ul class="entity-url-list">
-          {urls.map((u) => (
-            <li>
-              <a href={u.href} rel="noopener noreferrer">
-                {u.rel}
-              </a>
-              <span class="entity-url-list__href">{u.href}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
+    noClaims && (
+      <aside class="entity-callout entity-callout--empty" role="status">
+        <p class="entity-callout__title">No claims yet</p>
+        <p class="entity-callout__body">
+          This entity is in the dump but has no linked claims. Try
+          {' '}
+          <a href="/search">searching</a>
+          {' '}
+          for related entities, or read
+          {' '}
+          <a href="/about">About</a>
+          {' '}
+          for how Desk uses the Shared Evidence Graph.
+        </p>
+      </aside>
     )
   }
 
-  <section class="entity-section" aria-labelledby="entity-claims-out-heading">
-    <h2 id="entity-claims-out-heading" class="section-title">
-      Claims out
-      <span class="section-count">({claims.out.filter((c) => c.status !== 'superseded').length})</span>
-    </h2>
-    <p class="section-note">
-      Claims where this entity is the <strong>subject</strong> (non-superseded).
-    </p>
-    {
-      claims.out.filter((c) => c.status !== 'superseded').length === 0 ? (
-        <p class="entity-empty">No outbound claims.</p>
-      ) : (
-        <div class="entity-claim-list">
-          {claims.out
-            .filter((c) => c.status !== 'superseded')
-            .map((c) => (
-              <ClaimCard {...claimCardProps(c)} />
-            ))}
-        </div>
-      )
-    }
-  </section>
+  {
+    supersededOnly && (
+      <aside class="entity-callout entity-callout--history" role="status">
+        <p class="entity-callout__title">Only superseded claims</p>
+        <p class="entity-callout__body">
+          There are no published or draft claims for this entity right now.
+          Open <a href="#entity-history-heading">History</a> below for
+          superseded claim records — that section stays useful even when the
+          main claims lists are empty.
+        </p>
+      </aside>
+    )
+  }
 
-  <section class="entity-section" aria-labelledby="entity-claims-in-heading">
-    <h2 id="entity-claims-in-heading" class="section-title">
-      Claims in
-      <span class="section-count">({claims.in.filter((c) => c.status !== 'superseded').length})</span>
-    </h2>
-    <p class="section-note">
-      Claims where this entity is the <strong>object</strong> (non-superseded).
-    </p>
-    {
-      claims.in.filter((c) => c.status !== 'superseded').length === 0 ? (
-        <p class="entity-empty">No inbound claims.</p>
-      ) : (
-        <div class="entity-claim-list">
-          {claims.in
-            .filter((c) => c.status !== 'superseded')
-            .map((c) => (
-              <ClaimCard {...claimCardProps(c)} />
-            ))}
-        </div>
-      )
-    }
-  </section>
+  {
+    onlyDrafts && (
+      <aside class="entity-callout entity-callout--draft" role="status">
+        <p class="entity-callout__title">Draft claims only</p>
+        <p class="entity-callout__body">
+          Every claim below is <strong>draft</strong> (not published). Draft
+          cards use a dashed border and a Draft status chip so they stay visually
+          distinct from published evidence.
+        </p>
+      </aside>
+    )
+  }
+
+  {
+    onlyLowTier && !noClaims && !supersededOnly && (
+      <aside class="entity-callout entity-callout--uncertainty" role="note">
+        <p class="entity-callout__title">Uncertainty: tiers C / D only</p>
+        <p class="entity-callout__body">
+          All non-superseded claims on this entity are evidence tier C or D.
+          Limitations stay visible on each claim card (never behind a toggle) —
+          read them before citing.
+        </p>
+      </aside>
+    )
+  }
+
+  {
+    !noClaims && (
+      <>
+        <section class="entity-section" aria-labelledby="entity-claims-out-heading">
+          <h2 id="entity-claims-out-heading" class="section-title">
+            Claims out
+            <span class="section-count">({claimsOutMain.length})</span>
+          </h2>
+          <p class="section-note">
+            Claims where this entity is the <strong>subject</strong> (non-superseded).
+            {
+              publishedMain.length > 0 && draftMain.length > 0 && (
+                <>
+                  {' '}
+                  <span class="entity-claim-mix">
+                    {publishedMain.length} published · {draftMain.length} draft
+                    across in + out.
+                  </span>
+                </>
+              )
+            }
+          </p>
+          {
+            claimsOutMain.length === 0 ? (
+              <p class="entity-empty">
+                {supersededOnly
+                  ? 'No current outbound claims — see History for superseded records.'
+                  : 'No outbound claims.'}
+              </p>
+            ) : (
+              <div class="entity-claim-list">
+                {claimsOutMain.map((c) => (
+                  <ClaimCard {...claimCardProps(c)} />
+                ))}
+              </div>
+            )
+          }
+        </section>
+
+        <section class="entity-section" aria-labelledby="entity-claims-in-heading">
+          <h2 id="entity-claims-in-heading" class="section-title">
+            Claims in
+            <span class="section-count">({claimsInMain.length})</span>
+          </h2>
+          <p class="section-note">
+            Claims where this entity is the <strong>object</strong> (non-superseded).
+          </p>
+          {
+            claimsInMain.length === 0 ? (
+              <p class="entity-empty">
+                {supersededOnly
+                  ? 'No current inbound claims — see History for superseded records.'
+                  : 'No inbound claims.'}
+              </p>
+            ) : (
+              <div class="entity-claim-list">
+                {claimsInMain.map((c) => (
+                  <ClaimCard {...claimCardProps(c)} />
+                ))}
+              </div>
+            )
+          }
+        </section>
+      </>
+    )
+  }
 
   {
     claims.superseded.length > 0 && (
       <section class="entity-section" aria-labelledby="entity-history-heading">
         <h2 id="entity-history-heading" class="section-title">History</h2>
-        <details class="entity-history">
+        <details class="entity-history" open={supersededOnly}>
           <summary>
             History / superseded ({claims.superseded.length})
           </summary>
@@ -269,7 +359,13 @@ const description =
     <p class="section-note">One-hop neighbors via claims (unique dump entities).</p>
     {
       related.length === 0 ? (
-        <p class="entity-empty">No related entities in this dump.</p>
+        <p class="entity-empty">
+          No related entities in this dump.
+          {' '}
+          <a href="/search">Search entities</a>
+          {' · '}
+          <a href="/about">About Desk</a>
+        </p>
       ) : (
         <ul class="seed-list entity-related-list">
           {related.map((r) => (
@@ -291,13 +387,18 @@ const description =
     csvText={csvText}
     bibtexText={bibtex.text}
     citeSnippet={citeSnippet}
+    embedSnippet={embedSnippet}
     claimCount={exportClaims.length}
     bibtexEntryCount={bibtex.entryCount}
   />
 
   <TierLegend />
 
-  <p>
+  <p class="entity-footer-nav">
     <a href="/">← Back to home</a>
+    {' · '}
+    <a href="/search">Search</a>
+    {' · '}
+    <a href="/about">About</a>
   </p>
 </BaseLayout>

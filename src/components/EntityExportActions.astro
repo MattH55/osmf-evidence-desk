@@ -1,13 +1,14 @@
 ---
 /**
- * Entity page export actions (ED-9 / ED-10 / ED-11).
- * Server builds CSV / BibTeX / cite snippet; client Blob-downloads or copies.
+ * Entity page export actions (ED-9 / ED-10 / ED-11 / ED-13).
+ * Server builds CSV / BibTeX / cite / embed snippet; client Blob-downloads or copies.
  */
 interface Props {
   entityId: string;
   csvText: string;
   bibtexText: string;
   citeSnippet: string;
+  embedSnippet: string;
   /** Optional note shown near BibTeX button. */
   bibtexNote?: string;
   claimCount: number;
@@ -19,6 +20,7 @@ const {
   csvText,
   bibtexText,
   citeSnippet,
+  embedSnippet,
   bibtexNote = 'BibTeX includes DOI/PMID (and NCT when present). url / osmf_page sources are omitted — see About.',
   claimCount,
   bibtexEntryCount,
@@ -57,16 +59,29 @@ const bibFilename = `${basename}-sources.bib`;
     <button type="button" class="btn btn--primary" data-export="cite">
       Copy citation
     </button>
+    <button
+      type="button"
+      class="btn btn--secondary"
+      data-export="embed"
+      aria-describedby="entity-export-embed-note"
+    >
+      Copy embed
+    </button>
   </div>
   <p class="entity-export__bib-note" id="entity-export-bib-note">
     {bibtexNote}
     {' '}
     <a href="/about#exports">About exports</a>
   </p>
+  <p class="entity-export__embed-note" id="entity-export-embed-note" role="note">
+    <strong>Embed is a preview / unstable API.</strong>
+    The iframe snippet includes this entity’s id and Desk URL; dimensions, params,
+    and host path may change before Cite &amp; Embed hardens.
+  </p>
   <p class="entity-export__status" data-export-status aria-live="polite"></p>
 </section>
 
-<script define:vars={{ csvText, bibtexText, citeSnippet }}>
+<script define:vars={{ csvText, bibtexText, citeSnippet, embedSnippet }}>
   function downloadText(filename, text, mime) {
     const blob = new Blob([text], { type: mime });
     const url = URL.createObjectURL(blob);
@@ -139,6 +154,22 @@ const bibFilename = `${basename}-sources.bib`;
             btn.textContent = 'Copied';
             window.setTimeout(() => {
               btn.textContent = prev || 'Copy citation';
+            }, 1600);
+          }
+          return;
+        }
+        if (kind === 'embed') {
+          const ok = await copyText(embedSnippet);
+          setStatus(
+            ok
+              ? 'Embed snippet copied (preview / unstable API)'
+              : 'Could not copy embed snippet',
+          );
+          if (ok) {
+            const prev = btn.textContent;
+            btn.textContent = 'Copied';
+            window.setTimeout(() => {
+              btn.textContent = prev || 'Copy embed';
             }, 1600);
           }
         }

@@ -1,8 +1,17 @@
 ---
+/**
+ * Dump download page (ED-15).
+ * Shows ingested meta + how Desk obtains the graph dump at build time.
+ */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getMeta } from '../lib/dump';
 
 const meta = getMeta();
+const graphRepo = 'https://github.com/MattH55/osmf-evidence-graph';
+const schemaUrl =
+  'https://github.com/MattH55/osmf-evidence-graph/blob/main/SCHEMA.md';
+const schemaRaw =
+  'https://raw.githubusercontent.com/MattH55/osmf-evidence-graph/main/SCHEMA.md';
 ---
 
 <BaseLayout
@@ -11,11 +20,25 @@ const meta = getMeta();
 >
   <h1 class="page-title">Evidence dump</h1>
   <p class="lede">
-    Desk builds from a Shared Evidence Graph dump at build time. A public
-    download artifact (EG-8 / Desk ED-15) is not wired yet; until then use the
-    graph repo’s <code>build:dump</code> flow or Desk’s <code>fetch-dump</code>
-    script.
+    Desk ingests a Shared Evidence Graph dump at <strong>build time</strong> via
+    <code>npm run fetch-dump</code>. The dump is
+    <strong>vendored/generated for each build</strong> — not a permanent public
+    graph CDN URL yet. When EG-8 publishes a stable artifact, this page will
+    prefer that URL.
   </p>
+
+  <aside class="download-vendored" role="note">
+    <p class="download-vendored__title">Vendored at build</p>
+    <p class="download-vendored__body">
+      <code>fetch-dump</code> clones
+      <a href={graphRepo}>MattH55/osmf-evidence-graph</a>,
+      runs <code>build:dump</code>, and copies
+      <code>dist/dump/latest.json</code> into this site’s
+      <code>data/dump/latest.json</code>. A copy is also published under
+      <a href="/dump/latest.json"><code>/dump/latest.json</code></a>
+      for this build so the JSON is fetchable from the Desk host.
+    </p>
+  </aside>
 
   <section class="download-meta" aria-labelledby="dump-meta-heading">
     <h2 id="dump-meta-heading" class="section-title">This build’s dump meta</h2>
@@ -33,12 +56,12 @@ const meta = getMeta();
         <dd><code>{String(meta.is_example)}</code></dd>
       </div>
       <div class="meta-grid__row">
-        <dt>license</dt>
-        <dd>{meta.license}</dd>
-      </div>
-      <div class="meta-grid__row">
         <dt>publisher</dt>
         <dd>{meta.publisher}</dd>
+      </div>
+      <div class="meta-grid__row">
+        <dt>license</dt>
+        <dd>{meta.license}</dd>
       </div>
       {
         meta.notes ? (
@@ -51,32 +74,43 @@ const meta = getMeta();
     </dl>
   </section>
 
-  <section aria-labelledby="how-heading">
-    <h2 id="how-heading" class="section-title">How to obtain the dump</h2>
+  <section aria-labelledby="get-dump-heading">
+    <h2 id="get-dump-heading" class="section-title">Get the dump</h2>
+    <ul class="download-actions">
+      <li>
+        <a class="btn btn--primary" href="/dump/latest.json" download="latest.json">
+          Download this build’s dump JSON
+        </a>
+      </li>
+      <li>
+        <a class="btn btn--secondary" href={graphRepo}>
+          Evidence graph repository
+        </a>
+      </li>
+      <li>
+        <a class="btn btn--secondary" href={schemaUrl}>
+          SCHEMA.md
+        </a>
+        <span class="download-actions__alt">
+          (<a href={schemaRaw}>raw</a>)
+        </span>
+      </li>
+    </ul>
     <ol class="download-steps">
       <li>
         Clone or update
-        <a href="https://github.com/MattH55/osmf-evidence-graph"
-          >MattH55/osmf-evidence-graph</a
-        >
+        <a href={graphRepo}>MattH55/osmf-evidence-graph</a>
         and run <code>npm run build:dump</code> there, <strong>or</strong>
       </li>
       <li>
         From this Desk repo run <code>npm run fetch-dump</code> (clones the graph
-        cache, builds the dump, copies to <code>data/dump/latest.json</code>).
+        cache, builds the dump, copies to <code>data/dump/latest.json</code> and
+        <code>public/dump/latest.json</code>).
       </li>
     </ol>
-    <p class="section-note">
-      ED-15 will expand download UX (direct artifact URL, checksums, mirror).
-      Schema contract:
-      <a
-        href="https://raw.githubusercontent.com/MattH55/osmf-evidence-graph/main/SCHEMA.md"
-        >SCHEMA.md (raw)</a
-      >.
-    </p>
   </section>
 
-  <p>
+  <p class="entity-footer-nav">
     <a href="/">← Home</a>
     ·
     <a href="/search">Search</a>

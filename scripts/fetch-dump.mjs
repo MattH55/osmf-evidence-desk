@@ -4,6 +4,7 @@
  *
  * Cache:   .cache/osmf-evidence-graph  (gitignored)
  * Output:  data/dump/latest.json       (gitignored; generated each run)
+ *          public/dump/latest.json     (gitignored; site-fetchable copy)
  *
  * Requires network on first run (and whenever the cache is cold).
  */
@@ -20,6 +21,8 @@ const GRAPH_REF = 'main';
 const DUMP_SRC = path.join(CACHE_DIR, 'dist', 'dump', 'latest.json');
 const DUMP_DEST_DIR = path.join(ROOT, 'data', 'dump');
 const DUMP_DEST = path.join(DUMP_DEST_DIR, 'latest.json');
+const PUBLIC_DUMP_DIR = path.join(ROOT, 'public', 'dump');
+const PUBLIC_DUMP = path.join(PUBLIC_DUMP_DIR, 'latest.json');
 
 function run(cmd, args, opts = {}) {
   const result = spawnSync(cmd, args, {
@@ -73,6 +76,10 @@ function copyDump() {
   fs.mkdirSync(DUMP_DEST_DIR, { recursive: true });
   fs.copyFileSync(DUMP_SRC, DUMP_DEST);
   console.log(`Copied dump → ${path.relative(ROOT, DUMP_DEST)}`);
+  // ED-15: also publish under public/ so /dump/latest.json is fetchable from the site.
+  fs.mkdirSync(PUBLIC_DUMP_DIR, { recursive: true });
+  fs.copyFileSync(DUMP_DEST, PUBLIC_DUMP);
+  console.log(`Copied public dump → ${path.relative(ROOT, PUBLIC_DUMP)}`);
 }
 
 function buildSearchIndex() {
