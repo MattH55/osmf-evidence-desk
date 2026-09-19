@@ -1,0 +1,222 @@
+[
+  {
+    "num": "ED-0",
+    "title": "ED-0: Repo, hosting, and dump source decision",
+    "labels": [
+      "evidence-desk",
+      "mvp",
+      "p0",
+      "ed-m1"
+    ],
+    "milestone": "ED-M1"
+  },
+  {
+    "num": "ED-1",
+    "title": "ED-1: App scaffold (static-first)",
+    "labels": [
+      "evidence-desk",
+      "mvp",
+      "p0",
+      "ed-m1"
+    ],
+    "milestone": "ED-M1"
+  },
+  {
+    "num": "ED-2",
+    "title": "ED-2: Ingest evidence-graph dump at build time",
+    "labels": [
+      "evidence-desk",
+      "mvp",
+      "p0",
+      "ed-m1"
+    ],
+    "milestone": "ED-M1"
+  },
+  {
+    "num": "ED-3",
+    "title": "ED-3: Tier legend + uncertainty chrome",
+    "labels": [
+      "evidence-desk",
+      "mvp",
+      "p0",
+      "ed-m1"
+    ],
+    "milestone": "ED-M1"
+  },
+  {
+    "num": "ED-4",
+    "title": "ED-4: Entity page (core desk view)",
+    "labels": [
+      "evidence-desk",
+      "mvp",
+      "p0",
+      "ed-m2"
+    ],
+    "milestone": "ED-M2"
+  },
+  {
+    "num": "ED-5",
+    "title": "ED-5: Claim page",
+    "labels": [
+      "evidence-desk",
+      "mvp",
+      "p0",
+      "ed-m2"
+    ],
+    "milestone": "ED-M2"
+  },
+  {
+    "num": "ED-6",
+    "title": "ED-6: Home + featured seed conditions",
+    "labels": [
+      "evidence-desk",
+      "mvp",
+      "p1",
+      "ed-m2"
+    ],
+    "milestone": "ED-M2"
+  },
+  {
+    "num": "ED-7",
+    "title": "ED-7: About / cite / license",
+    "labels": [
+      "evidence-desk",
+      "mvp",
+      "p1",
+      "ed-m2"
+    ],
+    "milestone": "ED-M2"
+  },
+  {
+    "num": "ED-8",
+    "title": "ED-8: Client search (entity-first)",
+    "labels": [
+      "evidence-desk",
+      "mvp",
+      "p0",
+      "ed-m3"
+    ],
+    "milestone": "ED-M3"
+  },
+  {
+    "num": "ED-9",
+    "title": "ED-9: Export CSV for entity claims",
+    "labels": [
+      "evidence-desk",
+      "mvp",
+      "p0",
+      "ed-m3"
+    ],
+    "milestone": "ED-M3"
+  },
+  {
+    "num": "ED-10",
+    "title": "ED-10: Export BibTeX from sources",
+    "labels": [
+      "evidence-desk",
+      "mvp",
+      "p1",
+      "ed-m3"
+    ],
+    "milestone": "ED-M3"
+  },
+  {
+    "num": "ED-11",
+    "title": "ED-11: Cite-this-entity snippet",
+    "labels": [
+      "evidence-desk",
+      "mvp",
+      "p1",
+      "ed-m3"
+    ],
+    "milestone": "ED-M3"
+  },
+  {
+    "num": "ED-12",
+    "title": "ED-12: Network outbound links",
+    "labels": [
+      "evidence-desk",
+      "mvp",
+      "p0",
+      "ed-m4"
+    ],
+    "milestone": "ED-M4"
+  },
+  {
+    "num": "ED-13",
+    "title": "ED-13: Embed snippet stub (Cite & Embed prep)",
+    "labels": [
+      "evidence-desk",
+      "mvp",
+      "p2",
+      "ed-m4"
+    ],
+    "milestone": "ED-M4"
+  },
+  {
+    "num": "ED-14",
+    "title": "ED-14: Empty, draft, and uncertainty states polish",
+    "labels": [
+      "evidence-desk",
+      "mvp",
+      "p1",
+      "ed-m4"
+    ],
+    "milestone": "ED-M4"
+  },
+  {
+    "num": "ED-15",
+    "title": "ED-15: Dump download page",
+    "labels": [
+      "evidence-desk",
+      "mvp",
+      "p1",
+      "ed-m4"
+    ],
+    "milestone": "ED-M4"
+  },
+  {
+    "num": "ED-16",
+    "title": "ED-16: CI: build + link check for entity IDs",
+    "labels": [
+      "evidence-desk",
+      "mvp",
+      "p0",
+      "ed-m5"
+    ],
+    "milestone": "ED-M5"
+  },
+  {
+    "num": "ED-17",
+    "title": "ED-17: Deploy preview + production target",
+    "labels": [
+      "evidence-desk",
+      "mvp",
+      "p0",
+      "ed-m5"
+    ],
+    "milestone": "ED-M5"
+  },
+  {
+    "num": "ED-18",
+    "title": "ED-18: Soft launch checklist",
+    "labels": [
+      "evidence-desk",
+      "mvp",
+      "p0",
+      "ed-m5"
+    ],
+    "milestone": "ED-M5"
+  },
+  {
+    "num": "ED-19",
+    "title": "ED-19: Lightweight metrics",
+    "labels": [
+      "evidence-desk",
+      "mvp",
+      "p2",
+      "ed-m5"
+    ],
+    "milestone": "ED-M5"
+  }
+]
