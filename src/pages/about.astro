@@ -1,0 +1,32 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="About — Evidence Desk"
+  description="About Evidence Desk: scope, example data, and not medical advice."
+>
+  <h1 class="page-title">About</h1>
+  <p class="lede">
+    Evidence Desk is a search-and-browse UI for the OSMF Shared Evidence Graph —
+    conditions, biomarkers, agents, trials, papers, and claims with provenance
+    and evidence tiers.
+  </p>
+  <p>
+    <strong>Not medical advice.</strong> Content here is for research exploration
+    and transparency. It is not a substitute for professional medical judgment,
+    diagnosis, or treatment.
+  </p>
+  <p>
+    Soft launch may use illustrative / example dump data
+    (<code>meta.is_example</code>) with a persistent banner until curated claims
+    are ready. Product decisions (host, dump source, soft-launch policy) are
+    recorded in
+    <a href="https://github.com/MattH55/osmf-evidence-desk/blob/main/DECISIONS.md"
+      >DECISIONS.md</a
+    >.
+  </p>
+  <p>
+    <a href="/">← Back to home</a>
+  </p>
+</BaseLayout>

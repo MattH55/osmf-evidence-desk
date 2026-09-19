@@ -1,0 +1,21 @@
+{
+  "name": "osmf-evidence-desk",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Search-and-browse app for the OSMF Shared Evidence Graph",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "astro": "^5.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

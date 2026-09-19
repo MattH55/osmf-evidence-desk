@@ -1,0 +1,25 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+/**
+ * Temporary: show example banner on homepage for visual check in ED-1.
+ * ED-2 will drive this from dump `meta.is_example` across pages.
+ */
+const showExampleBanner = true;
+---
+
+<BaseLayout
+  title="Evidence Desk — scaffold"
+  description="Evidence Desk app scaffold (ED-1)."
+  showExampleBanner={showExampleBanner}
+>
+  <h1 class="page-title">Evidence Desk — scaffold</h1>
+  <p class="lede">
+    Lean Astro + TypeScript static shell for the OSMF Evidence Desk. Dump
+    ingest lands in ED-2; this page is placeholder copy only.
+  </p>
+  <p>
+    Learn more on the <a href="/about">About</a> page, including the permanent
+    not-medical-advice notice and links to locked product decisions.
+  </p>
+</BaseLayout>
