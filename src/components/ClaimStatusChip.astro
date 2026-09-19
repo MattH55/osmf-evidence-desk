@@ -1,0 +1,33 @@
+---
+/**
+ * Claim lifecycle status chip: draft | published | superseded.
+ */
+export type ClaimStatus = 'draft' | 'published' | 'superseded';
+
+interface Props {
+  status: ClaimStatus;
+}
+
+const STATUS_MEANING: Record<ClaimStatus, string> = {
+  draft: 'Authoring / review in progress',
+  published: 'Curator-reviewed for public dump use',
+  superseded: 'Replaced by another claim',
+};
+
+const STATUS_LABEL: Record<ClaimStatus, string> = {
+  draft: 'Draft',
+  published: 'Published',
+  superseded: 'Superseded',
+};
+
+const { status } = Astro.props;
+const label = `${STATUS_LABEL[status]}: ${STATUS_MEANING[status]}`;
+---
+
+<span
+  class={`claim-status-chip claim-status-chip--${status}`}
+  title={label}
+  aria-label={label}
+>
+  <span class="claim-status-chip__text" aria-hidden="true">{STATUS_LABEL[status]}</span>
+</span>

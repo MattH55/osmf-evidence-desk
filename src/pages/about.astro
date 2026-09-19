@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import TierLegend from '../components/TierLegend.astro';
 import { getMeta } from '../lib/dump';
 
 const meta = getMeta();
@@ -7,7 +8,7 @@ const meta = getMeta();
 
 <BaseLayout
   title="About — Evidence Desk"
-  description="About Evidence Desk: scope, example data, and not medical advice."
+  description="About Evidence Desk: scope, evidence tiers, example data, and not medical advice."
 >
   <h1 class="page-title">About</h1>
   <p class="lede">
@@ -42,6 +43,9 @@ const meta = getMeta();
       >DECISIONS.md</a
     >.
   </p>
+
+  <TierLegend />
+
   <p>
     <a href="/">← Back to home</a>
   </p>

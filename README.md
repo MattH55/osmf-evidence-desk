@@ -2,7 +2,7 @@
 
 Search-and-browse app for the [OSMF Shared Evidence Graph](https://github.com/MattH55/osmf-evidence-graph) — conditions, biomarkers, agents, trials, papers, and claims with provenance and evidence tiers.
 
-**Status:** ED-2 dump ingest (Astro + TypeScript, static output). Entity pages are ED-4.
+**Status:** ED-3 tier chrome (Astro + TypeScript, static output). Entity pages are ED-4.
 
 **Production host (planned):** [desk.opensourcemed.info](https://desk.opensourcemed.info) — DNS/deploy in ED-17.
 
@@ -34,6 +34,10 @@ npm run build        # runs fetch-dump via prebuild, then astro build
 **Helpers:** `getDump()`, `getMeta()`, `getSeedConditions()`, `getEntitiesByType(type)`.
 
 When EG-8 publishes a public dump artifact, prefer fetching that URL and drop the clone+build coupling (see [DECISIONS.md](./DECISIONS.md)).
+
+## Tier chrome (ED-3)
+
+Shared UI: `TierBadge`, `ClaimStatusChip`, `ClaimCard`, `TierLegend` under `src/components/`. C/D limitations always render inline. Preview: `/dev/claim-preview` (temporary until ED-4/ED-5).
 
 ## Develop
 

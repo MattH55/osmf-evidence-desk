@@ -242,3 +242,232 @@ img {
   padding: 0.15rem 0.4rem;
   border-radius: 3px;
 }
+
+/* --- ED-3: tier badges, status chips, claim cards, legend --- */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.tier-badge {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 800;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  border: 2px solid transparent;
+  white-space: nowrap;
+}
+
+.tier-badge--a {
+  background: #0b5c3a;
+  color: #ffffff;
+  border-color: #064028;
+}
+
+.tier-badge--b {
+  background: #0b5cab;
+  color: #ffffff;
+  border-color: #084578;
+}
+
+.tier-badge--c {
+  background: #8a5a00;
+  color: #ffffff;
+  border-color: #5c3c00;
+}
+
+.tier-badge--d {
+  background: #6b1f2a;
+  color: #ffffff;
+  border-color: #4a1219;
+}
+
+.claim-status-chip {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+  line-height: 1.3;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.claim-status-chip--draft {
+  background: #eef1f6;
+  border-color: #8a95a8;
+  color: #2a3344;
+}
+
+.claim-status-chip--published {
+  background: #e6f4ec;
+  border-color: #2d7a4f;
+  color: #14532d;
+}
+
+.claim-status-chip--superseded {
+  background: #f3e8ea;
+  border-color: #8b3a45;
+  color: #5c1a24;
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.claim-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.claim-card__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.claim-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.claim-card__id {
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  background: var(--color-bg);
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+}
+
+.claim-card__statement {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.claim-card__sources {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+
+.claim-card__sources-label {
+  display: inline-block;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-right: var(--space-xs);
+}
+
+.claim-card__limitations {
+  margin: 0;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: 6px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+}
+
+.claim-card__limitations--required {
+  background: #fff8e8;
+  border-color: #c98a00;
+  border-left: 4px solid #c98a00;
+}
+
+.claim-card__limitations-label {
+  display: block;
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
+  margin-bottom: var(--space-xs);
+  color: var(--color-text);
+}
+
+.claim-card__limitations-text {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--color-text);
+}
+
+.tier-legend {
+  margin-block: var(--space-xl);
+  padding: var(--space-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.tier-legend__title {
+  margin: 0 0 var(--space-sm);
+  font-size: 1.25rem;
+  color: var(--color-primary);
+}
+
+.tier-legend__intro {
+  margin: 0 0 var(--space-md);
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+}
+
+.tier-legend__list {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.tier-legend__row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-md);
+  align-items: center;
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tier-legend__row:last-child {
+  border-bottom: none;
+}
+
+.tier-legend__row dt {
+  margin: 0;
+}
+
+.tier-legend__row dd {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+.tier-legend__note {
+  margin: var(--space-md) 0 0;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+
+.claim-preview__grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin: var(--space-md) 0 var(--space-lg);
+}

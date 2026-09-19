@@ -1,0 +1,61 @@
+---
+/**
+ * Presentational claim card for desk chrome (ED-3).
+ * Tiers C/D always show `limitations` inline when present — never behind
+ * <details> or a click toggle.
+ */
+import TierBadge from './TierBadge.astro';
+import ClaimStatusChip from './ClaimStatusChip.astro';
+
+interface Props {
+  id?: string;
+  statement: string;
+  tier: 'A' | 'B' | 'C' | 'D';
+  status: 'draft' | 'published' | 'superseded';
+  sourcesPlaceholder?: string;
+  limitations?: string;
+}
+
+const {
+  id,
+  statement,
+  tier,
+  status,
+  sourcesPlaceholder = 'Sources (placeholder — ED-4/ED-5)',
+  limitations,
+} = Astro.props;
+
+const limitationsText =
+  typeof limitations === 'string' ? limitations.trim() : '';
+const isLowTier = tier === 'C' || tier === 'D';
+const showLimitations = limitationsText.length > 0;
+---
+
+<article class="claim-card" data-tier={tier} data-status={status}>
+  <header class="claim-card__header">
+    <div class="claim-card__meta">
+      <TierBadge tier={tier} />
+      <ClaimStatusChip status={status} />
+    </div>
+    {id && <code class="claim-card__id">{id}</code>}
+  </header>
+  <p class="claim-card__statement">{statement}</p>
+  <p class="claim-card__sources">
+    <span class="claim-card__sources-label">Sources</span>
+    {sourcesPlaceholder}
+  </p>
+  {
+    showLimitations && (
+      <div
+        class:list={[
+          'claim-card__limitations',
+          isLowTier && 'claim-card__limitations--required',
+        ]}
+        role="note"
+      >
+        <strong class="claim-card__limitations-label">Limitations</strong>
+        <p class="claim-card__limitations-text">{limitationsText}</p>
+      </div>
+    )
+  }
+</article>
