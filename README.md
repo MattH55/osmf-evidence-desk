@@ -2,7 +2,7 @@
 
 Search-and-browse app for the [OSMF Shared Evidence Graph](https://github.com/MattH55/osmf-evidence-graph) — conditions, biomarkers, agents, trials, papers, and claims with provenance and evidence tiers.
 
-**Status:** ED-1 app scaffold (Astro + TypeScript, static output). Dump ingest is ED-2.
+**Status:** ED-2 dump ingest (Astro + TypeScript, static output). Entity pages are ED-4.
 
 **Production host (planned):** [desk.opensourcemed.info](https://desk.opensourcemed.info) — DNS/deploy in ED-17.
 
@@ -10,15 +10,39 @@ Search-and-browse app for the [OSMF Shared Evidence Graph](https://github.com/Ma
 
 - **[Astro](https://astro.build/)** + TypeScript, static `output` (no auth, no DB)
 - Default static `dist/` for later Vercel static hosting
-- Soft-launch example banner component ready (`ExampleDataBanner`; wired from dump meta in ED-2)
+- Soft-launch example banner driven from dump `meta.is_example`
+
+## Evidence dump (ED-2)
+
+Desk does **not** vendor the graph dump in git. A prebuild step fetches and builds it:
+
+| Path | Role |
+|------|------|
+| `.cache/osmf-evidence-graph/` | Shallow clone of `MattH55/osmf-evidence-graph` @ `main` (gitignored) |
+| `data/dump/latest.json` | Copied from the graph’s `dist/dump/latest.json` after `npm run build:dump` (gitignored) |
+| `src/lib/dump.ts` | Build-time loader; fails the build if the file is missing or `meta.schema_version` ≠ `0.1.0` |
+
+```bash
+npm run fetch-dump   # clone/update graph cache → build dump → copy to data/dump/
+npm run build        # runs fetch-dump via prebuild, then astro build
+```
+
+**Network:** required for the first `fetch-dump` (and whenever `.cache/` is cold). CI uses the same flow (see `.github/workflows/build.yml`).
+
+**Schema gate:** only `meta.schema_version` `"0.1.0"` is accepted today. Unsupported or missing dumps abort `astro build`.
+
+**Helpers:** `getDump()`, `getMeta()`, `getSeedConditions()`, `getEntitiesByType(type)`.
+
+When EG-8 publishes a public dump artifact, prefer fetching that URL and drop the clone+build coupling (see [DECISIONS.md](./DECISIONS.md)).
 
 ## Develop
 
 ```bash
 npm install
-npm run dev      # local preview, typically http://localhost:4321
-npm run build    # static site → dist/
-npm run preview  # serve the production build
+npm run fetch-dump   # once (or whenever you need a fresh dump)
+npm run dev          # local preview, typically http://localhost:4321
+npm run build        # fetch-dump + static site → dist/
+npm run preview      # serve the production build
 ```
 
 Requires Node.js 20+.

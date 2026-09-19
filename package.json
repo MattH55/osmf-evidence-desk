@@ -6,6 +6,8 @@
   "description": "Search-and-browse app for the OSMF Shared Evidence Graph",
   "scripts": {
     "dev": "astro dev",
+    "fetch-dump": "node scripts/fetch-dump.mjs",
+    "prebuild": "node scripts/fetch-dump.mjs",
     "build": "astro build",
     "preview": "astro preview"
   },
